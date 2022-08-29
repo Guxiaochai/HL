@@ -32,7 +32,7 @@ public class Shadows
 
     static string[] shadowMaskKeywords =
     {
-        "SHADOW_MASK_DISTANCE"
+        "_SHADOW_MASK_DISTANCE"
     };
 
     static string[] directionalFilterKeywords =

@@ -67,6 +67,12 @@ public class Shadows
             light.shadows != LightShadows.None && light.shadowStrength > 0f &&
             cullingResults.GetShadowCasterBounds(visibleLightIndex, out Bounds b))
         {
+            LightBakingOutput lightBaking = light.bakingOutput;
+            if(lightBaking.lightmapBakeType == LightmapBakeType.Mixed &&
+               lightBaking.mixedLightingMode == MixedLightingMode.Shadowmask)
+            {
+                useShadowMask = true;
+            }
             shadowedDirectionalLights[ShadowedDirectionalLightCount] = new ShadowedDirectionalLight { visibleLightIndex = visibleLightIndex,
                                                                                                       slopeScaleBias = light.shadowBias,
                                                                                                       nearPlaneOffset = light.shadowNearPlane};

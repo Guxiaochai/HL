@@ -39,9 +39,7 @@ Varyings LitPassVertex (Attributes input) {
 
 float4 LitPassFragment (Varyings input) : SV_TARGET{
     UNITY_SETUP_INSTANCE_ID(input);
-    #if defined(LOD_FADE_CROSSFADE)
-        return -unity_LODFade.x;
-    #endif
+    ClipLOD(input.positionCS.xy, unity_LODFade.x);
     float4 base = GetBase(input.baseUV);
     Surface surface;
     surface.position = input.positionWS;

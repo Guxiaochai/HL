@@ -18,6 +18,7 @@ Shader "Custom RP/Lit"
 
         _DetailMap("Details", 2D) = "linearGrey" {}
         _DetailAlbedo("Detail Albedo", Range(0, 1)) = 1
+        _DetailSmoothness("Detail Smoothness", Range(0, 1)) = 1
         [Toggle(_PREMULTIPLY_ALPHA)] _PremulAlpha("Premultiply Alpha", Float) = 0
 
         _Cutoff("Alpha Cutoff", Range(0.0, 1.0)) = 0.5

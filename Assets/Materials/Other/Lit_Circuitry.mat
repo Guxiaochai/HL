@@ -71,7 +71,9 @@ Material:
     - _BumpScale: 1
     - _Clipping: 0
     - _Cutoff: 0.502
+    - _DetailAlbedo: 0.2
     - _DetailNormalMapScale: 1
+    - _DetailSmoothness: 0.206
     - _DstBlend: 0
     - _Fresnel: 1
     - _GlossMapScale: 1

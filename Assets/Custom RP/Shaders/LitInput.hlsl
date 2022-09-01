@@ -22,6 +22,7 @@ UNITY_INSTANCING_BUFFER_START(UnityPerMaterial)
 	UNITY_DEFINE_INSTANCED_PROP(float, _Smoothness)
     UNITY_DEFINE_INSTANCED_PROP(float, _Fresnel)
     UNITY_DEFINE_INSTANCED_PROP(float, _DetailAlbedo)
+    UNITY_DEFINE_INSTANCED_PROP(float, _DetailSmoothness)
 UNITY_INSTANCING_BUFFER_END(UnityPerMaterial)
 
 float2 TransformBaseUV(float2 baseUV){
@@ -64,9 +65,14 @@ float GetMetallic(float2 baseUV){
     return metallic;
 }
 
-float GetSmoothness(float2 baseUV){
+float GetSmoothness(float2 baseUV, float2 detailUV = 0.0){
     float smoothness = INPUT_PROP(_Smoothness);
     smoothness *= GetMask(baseUV).a;
+
+    float detail = GetDetail(detailUV).b * INPUT_PROP(_DetailSmoothness);
+    float mask = GetMask(baseUV).b;
+    smoothness = lerp(smoothness, detail < 0.0 ? 0.0 : 1.0, abs(detail) * mask);
+
     return smoothness;
 }
 

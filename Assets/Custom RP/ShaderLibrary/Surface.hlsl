@@ -7,6 +7,7 @@ struct Surface{
     float3 viewDirection;
     float3 color;
     float alpha;
+    float occlusion;
     float smoothness;
     float fresnelStrength;
     float metallic;

@@ -49,6 +49,7 @@ float4 LitPassFragment (Varyings input) : SV_TARGET{
     surface.color = base.rgb;
     surface.alpha = base.a;
     surface.smoothness = GetSmoothness(input.baseUV);
+    surface.fresnelStrength = GetFresnel(input.baseUV);
     surface.dither = InterleavedGradientNoise(input.positionCS.xy, 0);
     surface.metallic = GetMetallic(input.baseUV);
 #if defined(_PREMULTIPLY_ALPHA)

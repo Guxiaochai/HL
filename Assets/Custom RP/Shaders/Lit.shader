@@ -10,6 +10,7 @@ Shader "Custom RP/Lit"
         [HideInInspector] _Color("Color for Lightmap", Color) = (0.5, 0.5, 0.5, 1.0)
         _Metallic("Metallic", Range(0, 1)) = 0
         _Smoothness("Smothness", Range(0, 1)) = 0.5
+        _Fresnel("Fresnel", Range(0, 1)) = 1
         [NoScaleOffset] _EmissionMap("Emission", 2D) = "white" {}
         [HDR] _EmissionColor("Emission", Color) = (0.0, 0.0, 0.0, 0.0)
 

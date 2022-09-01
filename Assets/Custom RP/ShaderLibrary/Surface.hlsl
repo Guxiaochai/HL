@@ -8,6 +8,7 @@ struct Surface{
     float3 color;
     float alpha;
     float smoothness;
+    float fresnelStrength;
     float metallic;
     float depth;
     float dither;

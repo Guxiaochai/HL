@@ -10,7 +10,7 @@ public class Lighting
 
     CullingResults cullingResults;
 
-    const int maxDirLightCount = 4;
+    const int maxDirLightCount = 4, maxOtherLightCount = 64;
 
     static int
         dirLightCountId = Shader.PropertyToID("_DirectionalLightCount"),
@@ -18,10 +18,19 @@ public class Lighting
         dirLightDirectionsId = Shader.PropertyToID("_DirectionalLightDirections"),
         dirLightShadowDataId = Shader.PropertyToID("_DirectionalLightShadowData");
 
+    static int
+        otherLightCountId = Shader.PropertyToID("_OtherLightCount"),
+        otherLightColorsId = Shader.PropertyToID("_OtherLightColors"),
+        otherLightPositionsId = Shader.PropertyToID("_OtherLightPositions");
+
     static Vector4[]
         dirLightColors = new Vector4[maxDirLightCount],
         dirLightDirections = new Vector4[maxDirLightCount],
         dirLightShadowData = new Vector4[maxDirLightCount];
+
+    static Vector4[]
+        otherLightColors = new Vector4[maxOtherLightCount],
+        otherLightPositions = new Vector4[maxOtherLightCount];
 
     CommandBuffer buffer = new CommandBuffer
     {

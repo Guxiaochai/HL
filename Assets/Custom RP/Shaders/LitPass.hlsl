@@ -25,7 +25,9 @@ struct Varyings{
         float4 tangentWS : VAR_TANGENT;
     #endif
     float2 baseUV : VAR_BASE_UV;
-    float2 detailUV : VAR_DETAIL_UV;
+    #if defined(_DETAIL_MAP)
+        float2 detailUV : VAR_DETAIL_UV;
+    #endif
     GI_VARYINGS_DATA
     UNITY_VERTEX_INPUT_INSTANCE_ID
 };
@@ -42,14 +44,23 @@ Varyings LitPassVertex (Attributes input) {
     output.tangentWS = float4(TransformObjectToWorldDir(input.tangentOS.xyz), input.tangentOS.w);
     #endif
     output.baseUV = TransformBaseUV(input.baseUV);
-    output.detailUV = TransformDetailUV(input.baseUV);
+    #if defined(_DETAIL_MAP)
+        output.detailUV = TransformDetailUV(input.baseUV);
+    #endif
     return output;
 }
 
 float4 LitPassFragment (Varyings input) : SV_TARGET{
     UNITY_SETUP_INSTANCE_ID(input);
     ClipLOD(input.positionCS.xy, unity_LODFade.x);
-    InputConfig config = GetInputConfig(input.baseUV, input.detailUV);
+    InputConfig config = GetInputConfig(input.baseUV);
+    #if defined(_MASK_MAP)
+        config.useMask = true;
+    #endif
+    #if defined(_DETAIL_MAP)
+        config.detailUV = input.detailUV;
+        config.useDetail = true;
+    #endif
     float4 base = GetBase(config);
     Surface surface;
     surface.position = input.positionWS;

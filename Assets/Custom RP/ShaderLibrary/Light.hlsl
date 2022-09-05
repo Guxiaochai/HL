@@ -13,6 +13,8 @@ CBUFFER_START(_CustomLight)
     int _OtherLightCount;
     float4 _OtherLightColors[MAX_OTHER_LIGHT_COUNT];
     float4 _OtherLightPositions[MAX_OTHER_LIGHT_COUNT];
+    float4 _OtherLightDirections[MAX_OTHER_LIGHT_COUNT];
+    float4 _OtherLightSpotAngles[MAX_OTHER_LIGHT_COUNT];
 CBUFFER_END
 
 int GetDirectionalLightCount(){
@@ -56,7 +58,12 @@ Light GetOtherLight(int index, Surface surfaceWS, ShadowData shadowData){
     float distanceSqr = max(dot(ray, ray), 0.00001);
     //formula max(0, 1-(d^2/r^2)^2)^2
     float rangeAttenuation = Square(saturate(1.0 - Square(distanceSqr * _OtherLightPositions[index].w)));
-    light.attenuation = rangeAttenuation / distanceSqr;
+    float4 spotAngles = _OtherLightSpotAngles[index];
+    float spotAttenuation = Square(
+		saturate(dot(_OtherLightDirections[index].xyz, light.direction) *
+		spotAngles.x + spotAngles.y)
+	);
+	light.attenuation = spotAttenuation * rangeAttenuation / distanceSqr;
     return light;
 }
 

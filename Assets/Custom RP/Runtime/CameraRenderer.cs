@@ -22,7 +22,7 @@ public partial class CameraRenderer
     static ShaderTagId litShaderTagId = new ShaderTagId("CustomLit");
 
     public void Render(ScriptableRenderContext context, Camera camera,
-                       bool useDynamicBatching, bool useGPUInstacing, ShadowSettings shadowSettings)
+                       bool useDynamicBatching, bool useGPUInstacing, bool useLightsPerObject, ShadowSettings shadowSettings)
     {
         this.context = context;
         this.camera = camera;
@@ -36,18 +36,19 @@ public partial class CameraRenderer
 
         buffer.BeginSample(SampleName);
         ExecuteBuffer();
-        lighting.Setup(context, cullingResults, shadowSettings);
+        lighting.Setup(context, cullingResults, shadowSettings, useLightsPerObject);
         buffer.EndSample(SampleName);
         Setup();
-        DrawVisibleGeometry(useDynamicBatching, useGPUInstacing);
+        DrawVisibleGeometry(useDynamicBatching, useGPUInstacing, useLightsPerObject);
         DrawUnsupportedShaders();
         DrawGizmos();
         lighting.Cleanup();
         Submit();
     }
 
-    void DrawVisibleGeometry(bool useDynamicBatching, bool useGPUInstancing)
+    void DrawVisibleGeometry(bool useDynamicBatching, bool useGPUInstancing, bool useLightsPerObject)
     {
+        PerObjectData lightsPerObjectFlags = useLightsPerObject ? PerObjectData.LightData | PerObjectData.LightIndices : PerObjectData.None;
         var sortingSettings = new SortingSettings(camera)
         {
             criteria = SortingCriteria.CommonOpaque
@@ -61,7 +62,8 @@ public partial class CameraRenderer
                 PerObjectData.Lightmaps | PerObjectData.ShadowMask |
                 PerObjectData.LightProbe | PerObjectData.OcclusionProbe |
                 PerObjectData.LightProbeProxyVolume |
-                PerObjectData.OcclusionProbeProxyVolume
+                PerObjectData.OcclusionProbeProxyVolume |
+                lightsPerObjectFlags
         };
         drawingSettings.SetShaderPassName(1, litShaderTagId);
         var filteringSettings = new FilteringSettings(RenderQueueRange.opaque);

@@ -43,53 +43,62 @@ public class Lighting
         name = bufferName
     };
 
-    public void Setup(ScriptableRenderContext context, CullingResults cullingResults, ShadowSettings shadowSettings)
+    public void Setup(ScriptableRenderContext context, CullingResults cullingResults, ShadowSettings shadowSettings, bool useLightsPerObject)
     {
         this.cullingResults = cullingResults;
         buffer.BeginSample(bufferName);
         shadows.Setup(context, cullingResults, shadowSettings);
-        SetupLights();
+        SetupLights(useLightsPerObject);
         shadows.Render();
         buffer.EndSample(bufferName);
         context.ExecuteCommandBuffer(buffer);
         buffer.Clear();
     }
 
-    void SetupLights()
+    void SetupLights(bool useLightsPerObject)
     {
+        NativeArray<int> indexMap = useLightsPerObject ? cullingResults.GetLightIndexMap(Allocator.Temp) : default;
         NativeArray<VisibleLight> visibleLights = cullingResults.visibleLights;
         int dirLightCount = 0, otherLightCount = 0;
-        for(int i = 0; i < visibleLights.Length; i++)
+        int i;
+        for (i = 0; i < visibleLights.Length; i++)
         {
+            int newIndex = -1;
             VisibleLight visibleLight = visibleLights[i];
-            //if(visibleLight.lightType == LightType.Directional)
-            //{
-            //    SetupDirectionalLight(dirLightCount++, ref visibleLight);
-            //    if (dirLightCount >= maxDirLightCount)
-            //    {
-            //        break;
-            //    }
-            //}
             switch (visibleLight.lightType)
             {
                 case LightType.Directional:
-                    if(dirLightCount < maxDirLightCount)
+                    if (dirLightCount < maxDirLightCount)
                     {
                         SetupDirectionalLight(dirLightCount++, ref visibleLight);
                     }
                     break;
                 case LightType.Point:
-                    if(otherLightCount < maxOtherLightCount)
+                    if (otherLightCount < maxOtherLightCount)
                     {
+                        newIndex = otherLightCount;
                         SetupPointLight(otherLightCount++, ref visibleLight);
                     }
                     break;
                 case LightType.Spot:
-                    if(otherLightCount < maxOtherLightCount)
+                    if (otherLightCount < maxOtherLightCount)
                     {
+                        newIndex = otherLightCount;
                         SetupSpotLight(otherLightCount++, ref visibleLight);
                     }
                     break;
+            }
+            if (useLightsPerObject)
+            {
+                indexMap[i] = newIndex;
+            }
+        }
+
+        if (useLightsPerObject)
+        {
+            for (; i < indexMap.Length; i++)
+            {
+                indexMap[i] = -1;
             }
         }
 

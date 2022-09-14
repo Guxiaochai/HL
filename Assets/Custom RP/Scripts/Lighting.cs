@@ -38,6 +38,8 @@ public class Lighting
         otherLightSpotAngles = new Vector4[maxOtherLightCount],
         otherLightShadowData = new Vector4[maxOtherLightCount];
 
+    static string lightsPerObjectKeyword = "_LIGHTS_PER_OBJECT";
+
     CommandBuffer buffer = new CommandBuffer
     {
         name = bufferName
@@ -100,6 +102,13 @@ public class Lighting
             {
                 indexMap[i] = -1;
             }
+            cullingResults.SetLightIndexMap(indexMap);
+            indexMap.Dispose();
+            Shader.EnableKeyword(lightsPerObjectKeyword);
+        }
+        else
+        {
+            Shader.DisableKeyword(lightsPerObjectKeyword);
         }
 
         buffer.SetGlobalInt(dirLightCountId, dirLightCount);

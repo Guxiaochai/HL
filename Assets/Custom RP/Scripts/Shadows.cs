@@ -18,6 +18,8 @@ public class Shadows
     static int
         dirShadowAtlasId = Shader.PropertyToID("_DirectionalShadowAtlas"),
         dirShadowMatricesId = Shader.PropertyToID("_DirectionalShadowMatrices"),
+        otherShadowAtlasId = Shader.PropertyToID("_OtherShadowAtlas"),
+        otherShadowMatricesId = Shader.PropertyToID("_OtherShadowMatrices"),
         cascadeCountId = Shader.PropertyToID("_CascadeCount"),
         cascadeCullingSpheresId = Shader.PropertyToID("_CascadeCullingSpheres"),
         cascadeDataId = Shader.PropertyToID("_CascadeData"),
@@ -28,7 +30,10 @@ public class Shadows
                      cascadeData = new Vector4[maxCascades];
 
     static Matrix4x4[]
-        dirShadowMatrices = new Matrix4x4[maxShadowedDirectionalLightCount * maxCascades];
+        dirShadowMatrices = new Matrix4x4[maxshadowedDirLightCount * maxCascades],
+        otherShadowMatrices = new Matrix4x4[maxShadowedOtherLightCount];
+
+    Vector4 atlasSizes;
 
     static string[] shadowMaskKeywords =
     {
@@ -43,15 +48,23 @@ public class Shadows
         "_DIRECTIONAL_PCF7",
     };
 
+    static string[] otherFilterKeywords =
+    {
+        "_OTHER_PCF3",
+        "_OTHER_PCF5",
+        "_OTHER_PCF7",
+    };
+
     static string[] cascadeBlendKeywords =
     {
         "_CASCADE_BLEND_SOFT",
         "_CASCADE_BLEND_DITHER"
     };
 
-    const int maxShadowedDirectionalLightCount = 4, maxCascades = 4;
+    const int maxshadowedDirLightCount = 4, maxShadowedOtherLightCount = 16;
+    const int maxCascades = 4;
 
-    int ShadowedDirectionalLightCount;
+    int shadowedDirLightCount, shadowedOtherLightCount;
 
     struct ShadowedDirectionalLight
     {
@@ -60,11 +73,11 @@ public class Shadows
         public float nearPlaneOffset;
     }
 
-    ShadowedDirectionalLight[] shadowedDirectionalLights = new ShadowedDirectionalLight[maxShadowedDirectionalLightCount];
+    ShadowedDirectionalLight[] shadowedDirectionalLights = new ShadowedDirectionalLight[maxshadowedDirLightCount];
 
     public Vector4 ReserveDirectionalShadows(Light light, int visibleLightIndex)
     {
-        if(ShadowedDirectionalLightCount < maxShadowedDirectionalLightCount && 
+        if(shadowedDirLightCount < maxshadowedDirLightCount && 
             light.shadows != LightShadows.None && light.shadowStrength > 0f)
         {
             float maskChannel = -1;
@@ -79,10 +92,10 @@ public class Shadows
             {
                 return new Vector4(-light.shadowStrength, 0f, 0f, maskChannel);
             }
-            shadowedDirectionalLights[ShadowedDirectionalLightCount] = new ShadowedDirectionalLight { visibleLightIndex = visibleLightIndex,
+            shadowedDirectionalLights[shadowedDirLightCount] = new ShadowedDirectionalLight { visibleLightIndex = visibleLightIndex,
                                                                                                       slopeScaleBias = light.shadowBias,
                                                                                                       nearPlaneOffset = light.shadowNearPlane};
-            return new Vector4(light.shadowStrength, settings.directional.cascadeCount * ShadowedDirectionalLightCount++,
+            return new Vector4(light.shadowStrength, settings.directional.cascadeCount * shadowedDirLightCount++,
                                light.shadowBias, maskChannel);
         }
         return new Vector4(0f, 0f, 0f, -1f);
@@ -90,21 +103,27 @@ public class Shadows
 
     public Vector4 ReserveOtherShadows(Light light, int visibleLightIndex)
     {
-        if(light.shadows != LightShadows.None && light.shadowStrength > 0f)
+        if(light.shadows == LightShadows.None || light.shadowStrength <= 0f)
         {
-            LightBakingOutput lightBaking = light.bakingOutput;
-            if(lightBaking.lightmapBakeType == LightmapBakeType.Mixed &&
-               lightBaking.mixedLightingMode == MixedLightingMode.Shadowmask)
-            {
-                useShadowMask = true;
-                return new Vector4(light.shadowStrength, 0f, 0f, lightBaking.occlusionMaskChannel);
-            }
+            return new Vector4(0f, 0f, 0f, -1f);
         }
-        return new Vector4(0f, 0f, 0f, -1f);
+        float maskChannel = -1f;
+        LightBakingOutput lightBaking = light.bakingOutput;
+        if(lightBaking.lightmapBakeType == LightmapBakeType.Mixed &&
+           lightBaking.mixedLightingMode == MixedLightingMode.Shadowmask)
+        {
+            useShadowMask = true;
+            maskChannel = lightBaking.occlusionMaskChannel;
+        }
+        if(shadowedOtherLightCount >= maxShadowedOtherLightCount || !cullingResults.GetShadowCasterBounds(visibleLightIndex, out Bounds b))
+        {
+            return new Vector4(-light.shadowStrength, 0f, 0f, maskChannel);
+        }
+        return new Vector4(light.shadowStrength, shadowedOtherLightCount++, 0f, maskChannel);
     }
     public void Render()
     {
-        if(ShadowedDirectionalLightCount > 0)
+        if(shadowedDirLightCount > 0)
         {
             RenderDirectionalShadows();
         }
@@ -114,6 +133,10 @@ public class Shadows
         }
         buffer.BeginSample(bufferName);
         SetKeywords(shadowMaskKeywords, useShadowMask ? QualitySettings.shadowmaskMode == ShadowmaskMode.Shadowmask ? 0 : 1 : -1);
+        buffer.SetGlobalInt(cascadeCountId, shadowedDirLightCount > 0 ? settings.directional.cascadeCount : 0);
+        float f = 1f - settings.directional.cascadeFade;
+        buffer.SetGlobalVector(shadowDistanceFadeId, new Vector4(1f / settings.maxDistance, 1f / settings.distanceFade, 1f / (1f - f * f)));
+        buffer.SetGlobalVector(shadowAtlasSizeId, atlasSizes);
         buffer.EndSample(bufferName);
         ExecuteBuffer();
     }
@@ -121,29 +144,27 @@ public class Shadows
     void RenderDirectionalShadows()
     {
         int atlasSize = (int)settings.directional.atlasSize;
+        atlasSizes.x = atlasSize;
+        atlasSizes.y = 1f / atlasSize;
         buffer.GetTemporaryRT(dirShadowAtlasId, atlasSize, atlasSize, 32, FilterMode.Bilinear, RenderTextureFormat.Shadowmap);
         buffer.SetRenderTarget(dirShadowAtlasId, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);
         buffer.ClearRenderTarget(true, false, Color.clear);
         buffer.BeginSample(bufferName);
         ExecuteBuffer();
 
-        int tiles = ShadowedDirectionalLightCount * settings.directional.cascadeCount;
+        int tiles = shadowedDirLightCount * settings.directional.cascadeCount;
         int split = tiles <= 1 ? 1 : tiles <= 4 ? 2 : 4;
         int tileSize = atlasSize / split;
 
-        for(int i = 0; i < ShadowedDirectionalLightCount; i++)
+        for(int i = 0; i < shadowedDirLightCount; i++)
         {
             RenderDirectionalShadows(i, split, tileSize);
         }
-        buffer.SetGlobalInt(cascadeCountId, settings.directional.cascadeCount);
         buffer.SetGlobalVectorArray(cascadeCullingSpheresId, cascadeCullingSpheres);
         buffer.SetGlobalVectorArray(cascadeDataId, cascadeData);
         buffer.SetGlobalMatrixArray(dirShadowMatricesId, dirShadowMatrices);
-        float f = 1f - settings.directional.cascadeFade;
-        buffer.SetGlobalVector(shadowDistanceFadeId, new Vector4(1f / settings.maxDistance, 1f / settings.distanceFade, 1f/ (1f - f * f)));
         SetKeywords(directionalFilterKeywords, (int)settings.directional.filter - 1);
         SetKeywords(cascadeBlendKeywords, (int)settings.directional.cascadeBlend - 1);
-        buffer.SetGlobalVector(shadowAtlasSizeId, new Vector4(atlasSize, 1f / atlasSize));
         buffer.EndSample(bufferName);
         ExecuteBuffer();
     }
@@ -207,7 +228,7 @@ public class Shadows
         this.context = context;
         this.cullingResults = cullingResults;
         this.settings = settings;
-        ShadowedDirectionalLightCount = 0;
+        shadowedDirLightCount = shadowedOtherLightCount = 0;
         useShadowMask = false;
     }
 

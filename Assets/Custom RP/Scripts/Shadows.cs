@@ -73,7 +73,15 @@ public class Shadows
         public float nearPlaneOffset;
     }
 
+    struct ShadowedOtherLight
+    {
+        public int visibleLightIndex;
+        public float slopeScaleBias;
+        public float normalBias;
+    }
+
     ShadowedDirectionalLight[] shadowedDirectionalLights = new ShadowedDirectionalLight[maxshadowedDirLightCount];
+    ShadowedOtherLight[] shadowedOtherLights = new ShadowedOtherLight[maxShadowedOtherLightCount];
 
     public Vector4 ReserveDirectionalShadows(Light light, int visibleLightIndex)
     {
@@ -119,6 +127,14 @@ public class Shadows
         {
             return new Vector4(-light.shadowStrength, 0f, 0f, maskChannel);
         }
+
+        shadowedOtherLights[shadowedOtherLightCount] = new ShadowedOtherLight
+        {
+            visibleLightIndex = visibleLightIndex,
+            slopeScaleBias = light.shadowBias,
+            normalBias = light.shadowNormalBias
+        };
+
         return new Vector4(light.shadowStrength, shadowedOtherLightCount++, 0f, maskChannel);
     }
     public void Render()
@@ -130,6 +146,14 @@ public class Shadows
         else
         {
             buffer.GetTemporaryRT(dirShadowAtlasId, 1, 1, 32, FilterMode.Bilinear, RenderTextureFormat.Shadowmap);
+        }
+        if(shadowedOtherLightCount > 0)
+        {
+            RenderOtherShadows();
+        }
+        else
+        {
+            buffer.SetGlobalTexture(otherShadowAtlasId, dirShadowAtlasId);
         }
         buffer.BeginSample(bufferName);
         SetKeywords(shadowMaskKeywords, useShadowMask ? QualitySettings.shadowmaskMode == ShadowmaskMode.Shadowmask ? 0 : 1 : -1);
@@ -206,6 +230,52 @@ public class Shadows
         }
     }
 
+    void RenderOtherShadows()
+    {
+        int atlasSize = (int)settings.other.atlasSize;
+        atlasSizes.z = atlasSize;
+        atlasSizes.w = 1f / atlasSize;
+        buffer.GetTemporaryRT(otherShadowAtlasId, atlasSize, atlasSize, 32, FilterMode.Bilinear, RenderTextureFormat.Shadowmap);
+        buffer.SetRenderTarget(otherShadowAtlasId, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);
+        buffer.ClearRenderTarget(true, false, Color.clear);
+        buffer.BeginSample(bufferName);
+        ExecuteBuffer();
+
+        int tiles = shadowedOtherLightCount;
+        int split = tiles <= 1 ? 1 : tiles <= 4 ? 2 : 4;
+        int tileSize = atlasSize / split;
+
+        for (int i = 0; i < shadowedOtherLightCount; i++)
+        {
+            RenderSpotShadows(i, split, tileSize);
+        }
+        buffer.SetGlobalMatrixArray(otherShadowMatricesId, otherShadowMatrices);
+        SetKeywords(otherFilterKeywords, (int)settings.other.filter - 1);
+        buffer.EndSample(bufferName);
+        ExecuteBuffer();
+    }
+
+    void RenderSpotShadows(int index, int split, int tileSize)
+    {
+        ShadowedOtherLight light = shadowedOtherLights[index];
+        var shadowSettings =
+            new ShadowDrawingSettings(cullingResults, light.visibleLightIndex);
+        cullingResults.ComputeSpotShadowMatricesAndCullingPrimitives(
+            light.visibleLightIndex, out Matrix4x4 viewMatrix,
+            out Matrix4x4 projectionMatrix, out ShadowSplitData splitData
+        );
+        shadowSettings.splitData = splitData;
+        otherShadowMatrices[index] = ConvertToAtlasMatrix(
+            projectionMatrix * viewMatrix,
+            SetTileViewport(index, split, tileSize), split
+        );
+        buffer.SetViewProjectionMatrices(viewMatrix, projectionMatrix);
+        buffer.SetGlobalDepthBias(0f, light.slopeScaleBias);
+        ExecuteBuffer();
+        context.DrawShadows(ref shadowSettings);
+        buffer.SetGlobalDepthBias(0f, 0f);
+    }
+
     void SetCascadeData(int index, Vector4 cullingSphere, float tileSize)
     {
         float texelSize = 2f * cullingSphere.w / tileSize;
@@ -241,6 +311,10 @@ public class Shadows
     public void Cleanup()
     {
         buffer.ReleaseTemporaryRT(dirShadowAtlasId);
+        if(shadowedOtherLightCount > 0)
+        {
+            buffer.ReleaseTemporaryRT(otherShadowAtlasId);
+        }
         ExecuteBuffer();
     }
 

@@ -44,6 +44,7 @@ DirectionalShadowData GetDirectionalShadowData(int lightIndex, ShadowData shadow
 OtherShadowData GetOtherShadowData (int lightIndex) {
 	OtherShadowData data;
 	data.strength = _OtherLightShadowData[lightIndex].x;
+    data.tileIndex = _OtherLightShadowData[lightIndex].y;
 	data.shadowMaskChannel = _OtherLightShadowData[lightIndex].w;
 	return data;
 }

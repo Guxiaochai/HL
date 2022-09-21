@@ -22,7 +22,8 @@ public partial class CameraRenderer
     static ShaderTagId litShaderTagId = new ShaderTagId("CustomLit");
 
     public void Render(ScriptableRenderContext context, Camera camera,
-                       bool useDynamicBatching, bool useGPUInstacing, bool useLightsPerObject, ShadowSettings shadowSettings)
+                       bool useDynamicBatching, bool useGPUInstacing, 
+                       bool useLightsPerObject, ShadowSettings shadowSettings, PostFXSettings postFXSettings)
     {
         this.context = context;
         this.camera = camera;

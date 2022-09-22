@@ -47,11 +47,12 @@ public partial class CameraRenderer
         Setup();
         DrawVisibleGeometry(useDynamicBatching, useGPUInstacing, useLightsPerObject);
         DrawUnsupportedShaders();
-        DrawGizmos();
+        DrawGizmosBeforeFX();
         if (postFXStack.IsActive)
         {
             postFXStack.Render(frameBufferId);
         }
+        DrawGizmosAfterFX();
         Cleanup();
         Submit();
     }
@@ -102,6 +103,10 @@ public partial class CameraRenderer
 
         if (postFXStack.IsActive)
         {
+            if(flags > CameraClearFlags.Color)
+            {
+                flags = CameraClearFlags.Color;
+            }
             buffer.GetTemporaryRT(frameBufferId, camera.pixelWidth, camera.pixelHeight,
                                   32, FilterMode.Bilinear, RenderTextureFormat.Default);
             buffer.SetRenderTarget(frameBufferId, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);

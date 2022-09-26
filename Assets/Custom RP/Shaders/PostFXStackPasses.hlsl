@@ -2,6 +2,7 @@
 #define CUSTOM_POST_FX_PASSES_INCLUDED
 
 TEXTURE2D(_PostFXSource);
+TEXTURE2D(_PostFXSource2);
 SAMPLER(sampler_linear_clamp);
 
 float4 _PostFXSource_TexelSize;
@@ -13,6 +14,10 @@ struct Varyings{
 
 float4 GetSource(float2 screenUV){
     return SAMPLE_TEXTURE2D_LOD(_PostFXSource, sampler_linear_clamp, screenUV, 0);
+}
+
+float4 GetSource2(float2 screenUV){
+    return SAMPLE_TEXTURE2D_LOD(_PostFXSource2, sampler_linear_clamp, screenUV, 0);
 }
 
 float4 GetSourceTexelSize(){
@@ -70,6 +75,12 @@ float4 BloomVerticalPassFragment(Varyings input) : SV_TARGET{
         color += GetSource(input.screenUV + float2(0.0, offset)).rgb * weights[i];
     }
     return float4(color, 1.0);
+}
+
+float4 BloomCombinePassFragment(Varyings input) : SV_TARGET{
+    float3 lowRes = GetSource(input.screenUV).rgb;
+    float3 highRes = GetSource2(input.screenUV).rgb;
+    return float4(lowRes + highRes, 1.0);
 }
 
 #endif

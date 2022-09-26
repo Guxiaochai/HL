@@ -7,13 +7,16 @@ public partial class PostFXStack
     {
         BloomHorizontal,
         Copy,
+        BloomCombine,
         BloomVertical
     }
 
     const int maxBloomPyramidLevels = 16;
     int bloomPyramidId;
 
-    int fxSourceId = Shader.PropertyToID("_PostFXSource");
+    int
+        fxSourceId = Shader.PropertyToID("_PostFXSource"),
+        fxSource2Id = Shader.PropertyToID("_PostFXSource2");
 
     const string bufferName = "Emmer Post FX";
 
@@ -69,6 +72,12 @@ public partial class PostFXStack
         buffer.BeginSample("Bloom");
         PostFXSettings.BloomSettings bloom = settings.Bloom;
         int width = camera.pixelWidth / 2, height = camera.pixelHeight / 2;
+        if(bloom.maxIterations == 0 || height < bloom.downscaleLimit || width < bloom.downscaleLimit)
+        {
+            Draw(sourceId, BuiltinRenderTextureType.CameraTarget, Pass.Copy);
+            buffer.EndSample("Bloom");
+            return;
+        }
         RenderTextureFormat format = RenderTextureFormat.Default;
         int fromId = sourceId, toId = bloomPyramidId + 1;
 
@@ -89,15 +98,31 @@ public partial class PostFXStack
             width /= 2;
             height /= 2;
         }
-        Draw(fromId, BuiltinRenderTextureType.CameraTarget, Pass.Copy);
-
-        // releasing the texture use for pyramid level
-        for(i -= 1; i>=0; i--)
+        if(i > 1)
         {
-            buffer.ReleaseTemporaryRT(fromId);
+            //Draw(fromId, BuiltinRenderTextureType.CameraTarget, Pass.Copy);
             buffer.ReleaseTemporaryRT(fromId - 1);
-            fromId -= 2;
+            toId -= 5;
+
+            // releasing the texture use for pyramid level
+            for (i -= 1; i > 0; i--)
+            {
+                buffer.SetGlobalTexture(fxSource2Id, toId + 1);
+                Draw(fromId, toId, Pass.BloomCombine);
+                buffer.ReleaseTemporaryRT(fromId);
+                buffer.ReleaseTemporaryRT(toId + 1);
+                fromId = toId;
+                toId -= 2;
+            }
         }
+        else
+        {
+            buffer.ReleaseTemporaryRT(bloomPyramidId);
+        }
+
+        buffer.SetGlobalTexture(fxSource2Id, sourceId);
+        Draw(fromId, BuiltinRenderTextureType.CameraTarget, Pass.Copy);
+        buffer.ReleaseTemporaryRT(fromId);
         buffer.EndSample("Bloom");
     }
 }

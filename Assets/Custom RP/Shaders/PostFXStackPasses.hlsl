@@ -1,9 +1,13 @@
 #ifndef CUSTOM_POST_FX_PASSES_INCLUDED
 #define CUSTOM_POST_FX_PASSES_INCLUDED
 
+#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Filtering.hlsl"
+
 TEXTURE2D(_PostFXSource);
 TEXTURE2D(_PostFXSource2);
 SAMPLER(sampler_linear_clamp);
+
+bool _BloomBicubicUpsampling;
 
 float4 _PostFXSource_TexelSize;
 
@@ -22,6 +26,11 @@ float4 GetSource2(float2 screenUV){
 
 float4 GetSourceTexelSize(){
     return _PostFXSource_TexelSize;
+}
+
+float4 GetSourceBicubic(float2 screenUV){
+    return SampleTexture2DBicubic(TEXTURE2D_ARGS(_PostFXSource, sampler_linear_clamp), screenUV, 
+                                  _PostFXSource_TexelSize.zwxy, 1.0, 0.0);
 }
 
 Varyings DefaultPassVertex(uint vertexID : SV_VertexID){
@@ -78,7 +87,13 @@ float4 BloomVerticalPassFragment(Varyings input) : SV_TARGET{
 }
 
 float4 BloomCombinePassFragment(Varyings input) : SV_TARGET{
-    float3 lowRes = GetSource(input.screenUV).rgb;
+    float3 lowRes;
+    if(_BloomBicubicUpsampling){
+        lowRes = GetSourceBicubic(input.screenUV).rgb;
+    }
+    else{
+        lowRes = GetSource(input.screenUV).rgb;
+    }
     float3 highRes = GetSource2(input.screenUV).rgb;
     return float4(lowRes + highRes, 1.0);
 }

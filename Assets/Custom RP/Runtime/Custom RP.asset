@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 510e857a1c9e5ff429505b57238a1509, type: 3}
   m_Name: Custom RP
   m_EditorClassIdentifier: 
+  allowHDR: 1
   useDynamicBatching: 1
   useGPUInstancing: 1
   useSRPBatcher: 1

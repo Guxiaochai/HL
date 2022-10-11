@@ -14,6 +14,9 @@ float4 _PostFXSource_TexelSize;
 float4 _BloomThreshold;
 float _BloomIntensity;
 
+float4 _ColorAdjustments;
+float4 _ColorFilter;
+
 struct Varyings{
     float4 positionCS : SV_POSITION;
     float2 screenUV : VAR_SCREEN_UV;
@@ -160,24 +163,53 @@ float4 BloomScatterFinalPassFragment (Varyings input) : SV_TARGET {
 	return float4(lerp(highRes, lowRes, _BloomIntensity), 1.0);
 }
 
+float3 ColorGradePostExposure(float3 color){
+    return color * _ColorAdjustments.x;
+}
+
+float3 ColorGradingContrast (float3 color) {
+	color = LinearToLogC(color);
+	color = (color - ACEScc_MIDGRAY) * _ColorAdjustments.y + ACEScc_MIDGRAY;
+	return LogCToLinear(color);
+}
+
+float3 ColorGradeColorFilter(float3 color){
+    return color * _ColorFilter.rgb;
+}
+
+float3 ColorGrade(float3 color){
+    color = min(color, 60.0);
+    color = ColorGradePostExposure(color);
+    color = ColorGradingContrast(color);
+    color = ColorGradeColorFilter(color);
+    color = max(color, 0.0);
+    return color;
+}
+
 float4 ToneMappingReinhardPassFragment(Varyings input) : SV_TARGET{
     float4 color = GetSource(input.screenUV);
-    color.rgb = min(color.rgb, 60.0);
+    color.rgb = ColorGrade(color.rgb);
     color.rgb /= color.rgb + 1.0;
     return color;
 }
 
 float4 ToneMappingNeutralPassFragment (Varyings input) : SV_TARGET {
 	float4 color = GetSource(input.screenUV);
-	color.rgb = min(color.rgb, 60.0);
+	color.rgb = ColorGrade(color.rgb);
 	color.rgb = NeutralTonemap(color.rgb);
 	return color;
 }
 
 float4 ToneMappingACESPassFragment (Varyings input) : SV_TARGET {
 	float4 color = GetSource(input.screenUV);
-	color.rgb = min(color.rgb, 60.0);
+	color.rgb = ColorGrade(color.rgb);
 	color.rgb = AcesTonemap(unity_to_ACES(color.rgb));
+	return color;
+}
+
+float4 ToneMappingNonePassFragment(Varyings input) : SV_TARGET{
+    float4 color = GetSource(input.screenUV);
+	color.rgb = ColorGrade(color.rgb);
 	return color;
 }
 #endif

@@ -56,4 +56,18 @@ public class PostFXSettings : ScriptableObject
             return material;
         }
     }
+
+    [System.Serializable]
+    public struct ToneMappingSettings
+    {
+        public enum Mode { None = -1, ACES, Neutral, ReinHard }
+
+        public Mode mode;
+    }
+
+    [SerializeField]
+    ToneMappingSettings toneMapping = default;
+
+    public ToneMappingSettings ToneMapping => toneMapping;
+
 }

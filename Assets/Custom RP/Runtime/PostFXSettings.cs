@@ -57,7 +57,7 @@ public class PostFXSettings : ScriptableObject
             return material;
         }
     }
-
+    // Tone Mapping //////////////////////////////
     [Serializable]
     public struct ToneMappingSettings
     {
@@ -71,6 +71,7 @@ public class PostFXSettings : ScriptableObject
 
     public ToneMappingSettings ToneMapping => toneMapping;
 
+    // Color Grading ////////////////////////////
     [Serializable]
     public struct ColorAdjustmentsSettings
     {
@@ -93,4 +94,54 @@ public class PostFXSettings : ScriptableObject
     ColorAdjustmentsSettings colorAdjustments = new ColorAdjustmentsSettings { colorFilter = Color.white };
 
     public ColorAdjustmentsSettings ColorAdjustments => colorAdjustments;
+
+    // White Balance ////////////////////////////////////////
+    [Serializable]
+    public struct WhiteBalanceSettings
+    {
+        [Range(-100f, 100f)]
+        public float temperature, tint;
+    }
+
+    [SerializeField]
+    WhiteBalanceSettings whiteBalance = default;
+
+    public WhiteBalanceSettings WhiteBalance => whiteBalance;
+
+    // Split Toning ///////////////////////////////////////
+    [Serializable]
+    public struct SplitToningSettings
+    {
+        [ColorUsage(false)]
+        public Color shadows, highlights;
+
+        [Range(-100f, 100f)]
+        public float balance;
+    }
+
+    [SerializeField]
+    SplitToningSettings splitToning = new SplitToningSettings
+    {
+        shadows = Color.gray,
+        highlights = Color.gray
+    };
+
+    public SplitToningSettings SplitToning => splitToning;
+
+    // Channel Mixer ////////////////////////////////
+    [Serializable]
+    public struct ChannelMixerSettings
+    {
+        public Vector3 red, green, blue;
+    }
+
+    [SerializeField]
+    ChannelMixerSettings channelMixer = new ChannelMixerSettings
+    {
+        red = Vector3.right,
+        green = Vector3.up,
+        blue = Vector3.forward
+    };
+
+    public ChannelMixerSettings ChannelMixer => channelMixer;
 }

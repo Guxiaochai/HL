@@ -34,6 +34,12 @@ public partial class PostFXStack
         bloomResultId = Shader.PropertyToID("_BloomResult"),
         colorAdjustmentsId = Shader.PropertyToID("_ColorAdjustments"),
         colorFilterId = Shader.PropertyToID("_ColorFilter"),
+        whiteBalanceId = Shader.PropertyToID("_WhiteBalance"),
+        splitToningShadowsId = Shader.PropertyToID("_SplitToningShadows"),
+        splitToningHighlightsId = Shader.PropertyToID("_SplitToningHighlights"),
+        channelMixerRedId = Shader.PropertyToID("_ChannelMixerRed"),
+        channelMixerGreenId = Shader.PropertyToID("_ChannelMixerGreen"),
+        channelMixerBlueId = Shader.PropertyToID("_ChannelMixerBlue"),
         fxSourceId = Shader.PropertyToID("_PostFXSource"),
         fxSource2Id = Shader.PropertyToID("_PostFXSource2");
 
@@ -196,9 +202,35 @@ public partial class PostFXStack
         buffer.SetGlobalColor(colorFilterId, colorAdjustments.colorFilter.linear);
     }
 
+    void ConfigureWhiteBalance()
+    {
+        WhiteBalanceSettings whiteBalance = settings.WhiteBalance;
+        buffer.SetGlobalVector(whiteBalanceId, ColorUtils.ColorBalanceToLMSCoeffs(whiteBalance.temperature, whiteBalance.tint));
+    }
+
+    void ConfigureSplitToning()
+    {
+        SplitToningSettings splitToning = settings.SplitToning;
+        Color splitColor = splitToning.shadows;
+        splitColor.a = splitToning.balance * 0.01f;
+        buffer.SetGlobalColor(splitToningShadowsId, splitColor);
+        buffer.SetGlobalColor(splitToningHighlightsId, splitToning.highlights);
+    }
+
+    void ConfigureChannelMixer()
+    {
+        ChannelMixerSettings channelMixer = settings.ChannelMixer;
+        buffer.SetGlobalVector(channelMixerRedId, channelMixer.red);
+        buffer.SetGlobalVector(channelMixerGreenId, channelMixer.green);
+        buffer.SetGlobalVector(channelMixerBlueId, channelMixer.blue);
+    }
+
     void DoColorGradingAndToneMapping(int sourceId)
     {
         ConfigureColorAdjustments();
+        ConfigureWhiteBalance();
+        ConfigureSplitToning();
+        ConfigureChannelMixer();
         ToneMappingSettings.Mode mode = settings.ToneMapping.mode;
         Pass pass = mode < 0 ? Pass.Copy : Pass.ToneMappingNone + (int)mode;
         Draw(sourceId, BuiltinRenderTextureType.CameraTarget, pass);

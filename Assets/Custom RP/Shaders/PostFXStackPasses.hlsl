@@ -16,6 +16,9 @@ float _BloomIntensity;
 
 float4 _ColorAdjustments;
 float4 _ColorFilter;
+float4 _WhiteBalance;
+float4 _SplitToningShadows, _SplitToningHighlights;
+float4 _ChannelMixerRed, _ChannelMixerGreen, _ChannelMixerBlue;
 
 struct Varyings{
     float4 positionCS : SV_POSITION;
@@ -167,6 +170,12 @@ float3 ColorGradePostExposure(float3 color){
     return color * _ColorAdjustments.x;
 }
 
+float3 ColorGradeWhiteBalance(float3 color){
+    color = LinearToLMS(color);
+    color *= _WhiteBalance.rgb;
+    return LMSToLinear(color);
+}
+
 float3 ColorGradingContrast (float3 color) {
 	color = LinearToLogC(color);
 	color = (color - ACEScc_MIDGRAY) * _ColorAdjustments.y + ACEScc_MIDGRAY;
@@ -177,13 +186,45 @@ float3 ColorGradeColorFilter(float3 color){
     return color * _ColorFilter.rgb;
 }
 
+float3 ColorGradingHueShift(float3 color){
+    color = RgbToHsv(color);
+    float hue = color.x + _ColorAdjustments.z;
+    color.x = RotateHue(hue, 0.0, 1.0);
+    return HsvToRgb(color);
+}
+
+float3 ColorGradingSaturation(float3 color){
+    float luminance = Luminance(color);
+    return (color - luminance) * _ColorAdjustments.w + luminance;
+}
+
+float3 ColorGradeSplitToning(float3 color){
+    color = PositivePow(color, 1.0 / 2.2);
+    float t = saturate(Luminance(saturate(color)) + _SplitToningShadows.w);
+	float3 shadows = lerp(0.5, _SplitToningShadows.rgb, 1.0 - t);
+	float3 highlights = lerp(0.5, _SplitToningHighlights.rgb, t);
+    color = SoftLight(color, shadows);
+    color = SoftLight(color, highlights);
+    return PositivePow(color, 2.2);
+}
+
+float3 ColorGradingChannelMixer(float3 color){
+    return mul(float3x3(_ChannelMixerRed.rgb, _ChannelMixerGreen.rgb, _ChannelMixerBlue.rgb), color);
+}
+
 float3 ColorGrade(float3 color){
     color = min(color, 60.0);
     color = ColorGradePostExposure(color);
+    color = ColorGradeWhiteBalance(color);
     color = ColorGradingContrast(color);
     color = ColorGradeColorFilter(color);
     color = max(color, 0.0);
-    return color;
+    color = ColorGradeSplitToning(color);
+    color = ColorGradingChannelMixer(color);
+    color = max(color, 0.0);
+    color = ColorGradingHueShift(color);
+    color = ColorGradingSaturation(color);
+    return max(color, 0.0);
 }
 
 float4 ToneMappingReinhardPassFragment(Varyings input) : SV_TARGET{

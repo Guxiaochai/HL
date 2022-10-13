@@ -40,6 +40,10 @@ public partial class PostFXStack
         channelMixerRedId = Shader.PropertyToID("_ChannelMixerRed"),
         channelMixerGreenId = Shader.PropertyToID("_ChannelMixerGreen"),
         channelMixerBlueId = Shader.PropertyToID("_ChannelMixerBlue"),
+        smhShadowsId = Shader.PropertyToID("_SMHShadows"),
+        smhMidtonesId = Shader.PropertyToID("_SMHMidtones"),
+        smhHighlightsId = Shader.PropertyToID("_SMHHighlights"),
+        smhRangeId = Shader.PropertyToID("_SMHRange"),
         fxSourceId = Shader.PropertyToID("_PostFXSource"),
         fxSource2Id = Shader.PropertyToID("_PostFXSource2");
 
@@ -225,12 +229,22 @@ public partial class PostFXStack
         buffer.SetGlobalVector(channelMixerBlueId, channelMixer.blue);
     }
 
+    void ConfigureShadowsMidtonesHighlights()
+    {
+        ShadowsMidtonesHighlightsSettings smh = settings.ShadowsMidtonesHighlights;
+        buffer.SetGlobalColor(smhShadowsId, smh.shadows.linear);
+        buffer.SetGlobalColor(smhMidtonesId, smh.midtones.linear);
+        buffer.SetGlobalColor(smhHighlightsId, smh.highlights.linear);
+        buffer.SetGlobalVector(smhRangeId, new Vector4(smh.shadowsStart, smh.shadowsEnd, smh.highlightsStart, smh.highlightsEnd));
+    }
+
     void DoColorGradingAndToneMapping(int sourceId)
     {
         ConfigureColorAdjustments();
         ConfigureWhiteBalance();
         ConfigureSplitToning();
         ConfigureChannelMixer();
+        ConfigureShadowsMidtonesHighlights();
         ToneMappingSettings.Mode mode = settings.ToneMapping.mode;
         Pass pass = mode < 0 ? Pass.Copy : Pass.ToneMappingNone + (int)mode;
         Draw(sourceId, BuiltinRenderTextureType.CameraTarget, pass);

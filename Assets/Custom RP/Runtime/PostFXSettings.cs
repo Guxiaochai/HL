@@ -144,4 +144,11 @@ public class PostFXSettings : ScriptableObject
     };
 
     public ChannelMixerSettings ChannelMixer => channelMixer;
+
+    // Shadows Midtones Highlights ///////////////////
+    [Serializable]
+    public struct ShadowsMidtonesHighlightsSettings
+    {
+
+    }
 }

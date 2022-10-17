@@ -56,7 +56,7 @@ Shader "Custom RP/Lit"
                 "LightMode" = "CustomLit"
             }
 
-            Blend [_SrcBlend] [_DstBlend]
+            Blend [_SrcBlend] [_DstBlend], One OneMinusSrcAlpha //逗号后面的是表示alpha通道的blend模式
             ZWrite [_ZWrite]
             HLSLPROGRAM
 

@@ -24,6 +24,7 @@ public partial class CameraRenderer
 
     static ShaderTagId unlitShaderTagId = new ShaderTagId("SRPDefaultUnlit");
     static ShaderTagId litShaderTagId = new ShaderTagId("CustomLit");
+    static CameraSettings defaultCameraSettings = new CameraSettings();
 
     static int frameBufferId = Shader.PropertyToID("_CameraFrameBuffer");
 
@@ -35,6 +36,9 @@ public partial class CameraRenderer
         this.context = context;
         this.camera = camera;
 
+        var crpCamera = camera.GetComponent<CustomRenderPipelineCamera>();
+        CameraSettings cameraSettings = crpCamera ? crpCamera.Settings : defaultCameraSettings;
+
         PrepareBuffer();
         PrepareForSceneWindow();
         if (!Cull(shadowSettings.maxDistance))
@@ -45,7 +49,7 @@ public partial class CameraRenderer
         buffer.BeginSample(SampleName);
         ExecuteBuffer();
         lighting.Setup(context, cullingResults, shadowSettings, useLightsPerObject);
-        postFXStack.Setup(context, camera, postFXSettings, useHDR, colorLUTResolution);
+        postFXStack.Setup(context, camera, postFXSettings, useHDR, colorLUTResolution, cameraSettings.finalBlendMode);
         buffer.EndSample(SampleName);
         Setup();
         DrawVisibleGeometry(useDynamicBatching, useGPUInstacing, useLightsPerObject);

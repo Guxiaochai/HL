@@ -20,11 +20,11 @@ MonoBehaviour:
     threshold: 0.54
     thresholdKnee: 0.641
     intensity: 0.72
-    fadeFireflies: 1
+    fadeFireflies: 0
     mode: 0
     scatter: 0.387
   toneMapping:
-    mode: 0
+    mode: 1
   colorAdjustments:
     postExposure: 0
     contrast: 0
@@ -35,8 +35,8 @@ MonoBehaviour:
     temperature: 0
     tint: 0
   splitToning:
-    shadows: {r: 0.3042453, g: 0.3561802, b: 0.5, a: 1}
-    highlights: {r: 0.4716981, g: 0.3971395, b: 0.28257388, a: 1}
+    shadows: {r: 0.371885, g: 0.42596272, b: 0.5754717, a: 1}
+    highlights: {r: 0.764151, g: 0.5405406, b: 0.18382876, a: 1}
     balance: 8
   channelMixer:
     red: {x: 1, y: 0, z: 0}

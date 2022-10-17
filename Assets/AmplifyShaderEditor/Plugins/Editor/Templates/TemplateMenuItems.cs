@@ -51,5 +51,10 @@ namespace AmplifyShaderEditor
 		{
 			AmplifyShaderEditorWindow.CreateConfirmationTemplateShader( "ed95fe726fd7b4644bb42f4d1ddd2bcd" );
 		}
+		[MenuItem( "Assets/Create/Amplify Shader/Custom RP/UI Custom Blending", false, 85 )]
+		public static void ApplyTemplateCustomRPUICustomBlending()
+		{
+			AmplifyShaderEditorWindow.CreateConfirmationTemplateShader( "53cfdb0d0dddaf145a068917bbb42c4e" );
+		}
 	}
 }

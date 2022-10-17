@@ -28,9 +28,9 @@ float4 UnlitPassFragment (Varyings input) : SV_TARGET{
     InputConfig config = GetInputConfig(input.baseUV);
     float4 base = GetBase(config);
 #if defined(_CLIPPING)
-    clip(base.a - GetCutoff(config));// discard the fragment if the parameter is less or equal than zero
+    clip(base.a - GetCutoff(config)); // discard the fragment if the parameter is less or equal than zero
 #endif
-    return base;
+    return float4(base.rgb, GetFinalAlpha(base.a));
 }
 
 #endif

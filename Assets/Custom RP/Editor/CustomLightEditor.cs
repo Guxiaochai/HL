@@ -15,5 +15,13 @@ public class CustomLightEditor : LightEditor
             settings.DrawInnerAndOuterSpotAngle();
             settings.ApplyModifiedProperties();
         }
+
+        var light = target as Light;
+        if(light.cullingMask != -1)
+        {
+            EditorGUILayout.HelpBox(light.type == LightType.Directional ? 
+                                    "Culling Mask only affects shadows" : "Culling Mask only affects shadow unless Use Lights Per Objects is on.", 
+                                    MessageType.Warning);
+        }
     }
 }

@@ -39,6 +39,11 @@ public partial class CameraRenderer
         var crpCamera = camera.GetComponent<CustomRenderPipelineCamera>();
         CameraSettings cameraSettings = crpCamera ? crpCamera.Settings : defaultCameraSettings;
 
+        if (cameraSettings.overridePostFX)
+        {
+            postFXSettings = cameraSettings.postFXSettings;
+        }
+
         PrepareBuffer();
         PrepareForSceneWindow();
         if (!Cull(shadowSettings.maxDistance))

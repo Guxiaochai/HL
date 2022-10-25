@@ -5,7 +5,7 @@ partial class CustomRenderPipelineAsset
 
     static CustomRenderPipelineAsset()
     {
-        renderingLayerNames = new string[32];
+        renderingLayerNames = new string[31];
         for(int i = 0; i < renderingLayerNames.Length; i++)
         {
             renderingLayerNames[i] = "Layer" + (i + 1);

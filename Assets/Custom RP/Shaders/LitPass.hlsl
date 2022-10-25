@@ -80,6 +80,7 @@ float4 LitPassFragment (Varyings input) : SV_TARGET{
     surface.metallic = GetMetallic(config);
     surface.occlusion = GetOcclusion(config);
     surface.dither = InterleavedGradientNoise(input.positionCS.xy, 0);
+    surface.renderingLayerMask = asuint(unity_RenderingLayer.x);
 #if defined(_PREMULTIPLY_ALPHA)
     BRDF brdf = GetBRDF(surface, true);
 #else

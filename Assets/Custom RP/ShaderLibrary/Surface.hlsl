@@ -14,6 +14,7 @@ struct Surface{
     float metallic;
     float depth;
     float dither;
+    uint renderingLayerMask;
 };
 
 #endif

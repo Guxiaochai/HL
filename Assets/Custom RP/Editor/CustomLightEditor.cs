@@ -12,7 +12,7 @@ public class CustomLightEditor : LightEditor
     public override void OnInspectorGUI()
     {
         base.OnInspectorGUI();
-        DrawRenderingLayerMask();
+        RenderingLayerMaskDrawer.Draw(settings.renderingLayerMask, renderingLayerMaskLabel);
         if(!settings.lightType.hasMultipleDifferentValues &&
             (LightType)settings.lightType.enumValueIndex == LightType.Spot)
         {
@@ -29,24 +29,4 @@ public class CustomLightEditor : LightEditor
         }
     }
 
-    void DrawRenderingLayerMask()
-    {
-        SerializedProperty property = settings.renderingLayerMask;
-        EditorGUI.showMixedValue = property.hasMultipleDifferentValues;
-        EditorGUI.BeginChangeCheck();
-        int mask = property.intValue;
-        if(mask == int.MaxValue)
-        {
-            mask = -1;
-        }
-        mask = EditorGUILayout.MaskField(
-            renderingLayerMaskLabel, mask,
-            GraphicsSettings.currentRenderPipeline.renderingLayerMaskNames
-        );
-        if (EditorGUI.EndChangeCheck())
-        {
-            property.intValue = mask == -1 ? int.MaxValue : mask;
-        }
-        EditorGUI.showMixedValue = false;
-    }
 }

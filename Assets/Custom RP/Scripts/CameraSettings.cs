@@ -8,6 +8,11 @@ public class CameraSettings
 
     public PostFXSettings postFXSettings = default;
 
+    [RenderingLayerMaskField]
+    public int renderingLayerMask = -1;
+
+    public bool maskLights = false;
+
     [Serializable]
     public struct FinalBlendMode
     {

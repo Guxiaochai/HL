@@ -11,6 +11,7 @@ public partial class CameraRenderer
     Lighting lighting = new Lighting();
 
     PostFXStack postFXStack = new PostFXStack();
+    ScannerEffect scannerEffect = new ScannerEffect();
 
     Camera camera;
 
@@ -55,6 +56,7 @@ public partial class CameraRenderer
         ExecuteBuffer();
         lighting.Setup(context, cullingResults, shadowSettings, useLightsPerObject, cameraSettings.maskLights ? cameraSettings.renderingLayerMask : -1);
         postFXStack.Setup(context, camera, postFXSettings, useHDR, colorLUTResolution, cameraSettings.finalBlendMode);
+        //scannerEffect.Setup(context, camera, scannerEffectSettings);
         buffer.EndSample(SampleName);
         Setup();
         DrawVisibleGeometry(useDynamicBatching, useGPUInstacing, useLightsPerObject, cameraSettings.renderingLayerMask);

@@ -64,6 +64,7 @@ public partial class CameraRenderer
         {
             postFXStack.Render(frameBufferId);
         }
+
         DrawGizmosAfterFX();
         Cleanup();
         Submit();

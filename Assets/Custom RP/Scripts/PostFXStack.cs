@@ -71,6 +71,7 @@ public partial class PostFXStack
     int colorLUTResolution;
 
     public bool IsActive => settings != null;
+    //public bool IsActive => false;
 
     public PostFXStack()
     {

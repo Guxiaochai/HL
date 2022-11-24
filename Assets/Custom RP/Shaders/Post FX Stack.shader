@@ -141,6 +141,16 @@ Shader "Hidden/Custom RP/Post FX Stack"{
         }
 
         Pass{
+            Name "Scanner Effect"
+
+            HLSLPROGRAM
+                #pragma target 3.5
+                #pragma vertex ScannerEffectPassVertex
+                #pragma fragment ScannerEffectPassFragment
+            ENDHLSL
+        }
+
+        Pass{
             Name "Final"
 
             Blend [_FinalSrcBlend] [_FinalDstBlend]

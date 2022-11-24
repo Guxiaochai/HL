@@ -11,7 +11,6 @@ public partial class CameraRenderer
     Lighting lighting = new Lighting();
 
     PostFXStack postFXStack = new PostFXStack();
-    ScannerEffect scannerEffect = new ScannerEffect();
 
     Camera camera;
 

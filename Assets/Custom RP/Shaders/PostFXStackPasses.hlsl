@@ -7,6 +7,8 @@
 TEXTURE2D(_PostFXSource);
 TEXTURE2D(_PostFXSource2);
 SAMPLER(sampler_linear_clamp);
+TEXTURE2D(_CameraDepthTexture);
+SAMPLER(sampler_CameraDepthTexture);
 
 bool _BloomBicubicUpsampling;
 bool _ColorGradingLUTInLogC;
@@ -14,6 +16,14 @@ bool _ColorGradingLUTInLogC;
 float4 _PostFXSource_TexelSize;
 float4 _BloomThreshold;
 float _BloomIntensity;
+
+float _SEScanDistance;
+float _SEScanWidth;
+float _SELeadingEdgeSharpness;
+float4 _SELeadingEdgeColor;
+float4 _SEMidColor;
+float4 _SETrailColor;
+float4 _SEHorizontalBarColor;
 
 float4 _ColorAdjustments;
 float4 _ColorFilter;
@@ -24,9 +34,19 @@ float4 _SMHShadows, _SMHMidtones, _SMHHighlights, _SMHRange;
 
 float4 _ColorGradingLUTParameters;
 
+struct Attributes{
+    float3 positionOS : POSITION;
+	float2 baseUV : TEXCOORD0;
+	float4 ray : TEXCOORD1;
+	uint vertexID : SV_VertexID;
+};
+
 struct Varyings{
     float4 positionCS : SV_POSITION;
     float2 screenUV : VAR_SCREEN_UV;
+	float2 baseUV : TEXCOORD0;
+	float2 uv_depth : TEXCOORD1;
+	float4 interpolatedRay : TEXCOORD2;
 };
 
 float Luminance(float3 color, bool useACES){
@@ -74,6 +94,18 @@ Varyings DefaultPassVertex(uint vertexID : SV_VertexID){
 
     if(_ProjectionParams.x < 0.0){
         output.screenUV.y = 1.0 - output.screenUV.y;
+    }
+	return output;
+}
+
+Varyings ScannerEffectPassVertex(Attributes input){
+	Varyings output;
+	output.positionCS = TransformWorldToHClip(input.positionOS);
+	output.baseUV = input.baseUV;
+	output.uv_depth = input.baseUV.xy;
+
+	if(_PostFXSource_TexelSize.y < 0.0){
+        output.baseUV.y = 1.0 - output.baseUV.y;
     }
 	return output;
 }
@@ -273,6 +305,17 @@ float4 ColorGradingReinhardPassFragment (Varyings input) : SV_TARGET {
 	float3 color = GetColorGradedLUT(input.screenUV);
 	color /= color + 1.0;
 	return float4(color, 1.0);
+}
+
+float4 HorizBars(float2 p){
+	return 1 - saturate(round(abs(frac(p.y * 100) * 2)));
+}
+
+float4 ScannerEffectPassFragment(Varyings input) : SV_TARGET{
+	float4 color = GetSource(input.baseUV);
+
+	float rawDepth = SAMPLE_TEXTURE2D(_CameraDepthTexture, sampler_CameraDepthTexture, input.uv_depth).r;
+	return float4(rawDepth, 0.0, 0.0, 1.0);
 }
 
 TEXTURE2D(_ColorGradingLUT);

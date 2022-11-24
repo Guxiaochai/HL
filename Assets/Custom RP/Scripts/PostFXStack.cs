@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Rendering;
+using System;
 using static PostFXSettings;
 
 public partial class PostFXStack
@@ -19,8 +20,11 @@ public partial class PostFXStack
         ColorGradingACES,
         ColorGradingNeutral,
         ColorGradingReinhard,
+        ScannerEffect,
         Final
     }
+
+    
 
     bool useHDR;
 
@@ -50,6 +54,13 @@ public partial class PostFXStack
         colorGradingLUTId = Shader.PropertyToID("_ColorGradingLUT"),
         colorGradingLUTParametersId = Shader.PropertyToID("_ColorGradingLUTParameters"),
         colorGradingLUTInLogId = Shader.PropertyToID("_ColorGradingLUTInLogC"),
+        seScanDistanceId = Shader.PropertyToID("_SEScanDistance"),
+        seScanWidthId = Shader.PropertyToID("_SEScanWidth"),
+        seLeadingEdgeSharpnessId = Shader.PropertyToID("_SELeadingEdgeSharpness"),
+        seLeadingEdgeColorId = Shader.PropertyToID("_SELeadingEdgeColor"),
+        seMidColorId = Shader.PropertyToID("_SEMidColor"),
+        seTrailColorId = Shader.PropertyToID("_SETrailColor"),
+        seHorizontalBarColorId = Shader.PropertyToID("_SEHorizontalBarColor"),
         finalSrcBlendId = Shader.PropertyToID("_FinalSrcBlend"),
         finalDstBlendId = Shader.PropertyToID("_FinalDstBlend");
 
@@ -98,12 +109,14 @@ public partial class PostFXStack
     {
         if (DoBloom(sourceId))
         {
-            DoColorGradingAndToneMapping(bloomResultId);
+            //DoColorGradingAndToneMapping(bloomResultId);
+            DoScannerEffect(bloomResultId);
             buffer.ReleaseTemporaryRT(bloomResultId);
         }
         else
         {
-            DoColorGradingAndToneMapping(sourceId);
+            //DoColorGradingAndToneMapping(sourceId);
+            DoScannerEffect(sourceId);
         }
         context.ExecuteCommandBuffer(buffer);
         buffer.Clear();
@@ -265,6 +278,68 @@ public partial class PostFXStack
         buffer.SetGlobalVector(smhRangeId, new Vector4(smh.shadowsStart, smh.shadowsEnd, smh.highlightsStart, smh.highlightsEnd));
     }
 
+    void ConfigureScannerEffect()
+    {
+        ScannerEffectSettings se = settings.ScannerEffect;
+
+        // calculation goes in here before sending to GPU
+        
+        se.scanDistance += Time.deltaTime * 50;
+        //camera.depthTextureMode = DepthTextureMode.Depth; //copy the depth info from depth-buffer to RT
+        
+        float camFar = camera.farClipPlane;
+        float camFov = camera.fieldOfView;
+        float camAspect = camera.aspect;
+
+        float fovWHalf = camFov * 0.5f;
+
+        Vector3 toRight = camera.transform.right * Mathf.Tan(fovWHalf * Mathf.Deg2Rad) * camAspect;
+        Vector3 toTop = camera.transform.up * Mathf.Tan(fovWHalf * Mathf.Deg2Rad);
+
+        Vector3 topLeft = (camera.transform.forward - toRight + toTop);
+        float camScale = topLeft.magnitude * camFar;
+
+        topLeft.Normalize();
+        topLeft *= camScale;
+
+        Vector3 topRight = (camera.transform.forward + toRight + toTop);
+        topRight.Normalize();
+        topRight *= camScale;
+
+        Vector3 bottomRight = (camera.transform.forward + toRight - toTop);
+        bottomRight.Normalize();
+        bottomRight *= camScale;
+
+        Vector3 bottomLeft = (camera.transform.forward - toRight - toTop);
+        bottomLeft.Normalize();
+        bottomLeft *= camScale;
+
+        GL.MultiTexCoord2(0, 0.0f, 0.0f);
+        GL.MultiTexCoord(1, bottomLeft);
+        GL.Vertex3(0.0f, 0.0f, 0.0f);
+
+        GL.MultiTexCoord2(0, 1.0f, 0.0f);
+        GL.MultiTexCoord(1, bottomRight);
+        GL.Vertex3(1.0f, 0.0f, 0.0f);
+
+        GL.MultiTexCoord2(0, 1.0f, 1.0f);
+        GL.MultiTexCoord(1, topRight);
+        GL.Vertex3(1.0f, 1.0f, 0.0f);
+
+        GL.MultiTexCoord2(0, 0.0f, 1.0f);
+        GL.MultiTexCoord(1, topLeft);
+        GL.Vertex3(0.0f, 1.0f, 0.0f);
+
+        buffer.SetGlobalFloat(seScanDistanceId, se.scanDistance);
+        buffer.SetGlobalFloat(seScanWidthId, se.scanWidth);
+        buffer.SetGlobalFloat(seLeadingEdgeSharpnessId, se.leadingEdgeSharpness);
+        buffer.SetGlobalColor(seLeadingEdgeColorId, se.leadingEdgeColor);
+        buffer.SetGlobalColor(seMidColorId, se.midColor);
+        buffer.SetGlobalColor(seTrailColorId, se.trailColor);
+        buffer.SetGlobalColor(seHorizontalBarColorId, se.horizontalBarColor);
+        
+    }
+
     void DoColorGradingAndToneMapping(int sourceId)
     {
         ConfigureColorAdjustments();
@@ -295,5 +370,13 @@ public partial class PostFXStack
         );
         DrawFinal(sourceId);
         buffer.ReleaseTemporaryRT(colorGradingLUTId);
+    }
+
+    void DoScannerEffect(int sourceId)
+    {
+        ConfigureScannerEffect();
+        buffer.SetGlobalTexture(fxSourceId, sourceId);
+        buffer.Blit(sourceId, BuiltinRenderTextureType.CameraTarget, settings.Material, (int)Pass.ScannerEffect);
+        //DoColorGradingAndToneMapping(sourceId);
     }
 }

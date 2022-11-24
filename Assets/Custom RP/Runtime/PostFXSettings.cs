@@ -168,4 +168,31 @@ public class PostFXSettings : ScriptableObject
     };
 
     public ShadowsMidtonesHighlightsSettings ShadowsMidtonesHighlights => shadowsMidtonesHighlighs;
+
+    // Scanner Effect /////////////////////////////////////////////////////
+    [SerializeField]
+    public bool scannerEffectIsActive = false;
+
+    [Serializable]
+    public struct ScannerEffectSettings
+    {
+        public float scanDistance;
+
+        public float scanWidth;
+
+        public float leadingEdgeSharpness;
+
+        public Color leadingEdgeColor;
+
+        public Color midColor;
+
+        public Color trailColor;
+
+        public Color horizontalBarColor;
+    }
+
+    [SerializeField]
+    ScannerEffectSettings scannerEffect = default;
+
+    public ScannerEffectSettings ScannerEffect => scannerEffect;
 }

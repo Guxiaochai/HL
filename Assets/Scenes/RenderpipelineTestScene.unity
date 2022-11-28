@@ -1362,9 +1362,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da44f8d6fd32f6647b9623d76e27e059, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ScannerOrigin: {fileID: 1202134467}
-  EffectMaterial: {fileID: 2100000, guid: 954ae1141f779544e9878452d522c579, type: 2}
-  ScanDistance: 0
 --- !u!1 &1062714082
 GameObject:
   m_ObjectHideFlags: 0

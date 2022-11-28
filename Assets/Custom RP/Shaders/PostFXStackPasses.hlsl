@@ -6,7 +6,6 @@
 
 TEXTURE2D(_PostFXSource);
 TEXTURE2D(_PostFXSource2);
-SAMPLER(sampler_linear_clamp);
 TEXTURE2D(_CameraDepthTexture);
 SAMPLER(sampler_CameraDepthTexture);
 
@@ -42,7 +41,7 @@ struct Attributes{
 };
 
 struct Varyings{
-    float4 positionCS : SV_POSITION;
+    float4 positionCS_SS : SV_POSITION;
     float2 screenUV : VAR_SCREEN_UV;
 	float2 baseUV : TEXCOORD0;
 	float2 uv_depth : TEXCOORD1;
@@ -82,7 +81,7 @@ float3 ApplyBloomThreshold (float3 color) {
 
 Varyings DefaultPassVertex(uint vertexID : SV_VertexID){
     Varyings output;
-    output.positionCS = float4(
+    output.positionCS_SS = float4(
         vertexID <= 1 ? -1.0 : 3.0,
         vertexID == 1 ? 3.0 : -1.0,
         0.0, 1.0
@@ -100,7 +99,7 @@ Varyings DefaultPassVertex(uint vertexID : SV_VertexID){
 
 Varyings ScannerEffectPassVertex(Attributes input){
 	Varyings output;
-	output.positionCS = TransformWorldToHClip(input.positionOS);
+	output.positionCS_SS = TransformWorldToHClip(input.positionOS);
 	output.baseUV = input.baseUV;
 	output.uv_depth = input.baseUV.xy;
 

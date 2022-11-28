@@ -109,8 +109,8 @@ public partial class PostFXStack
     {
         if (DoBloom(sourceId))
         {
-            //DoColorGradingAndToneMapping(bloomResultId);
-            DoScannerEffect(bloomResultId);
+            DoColorGradingAndToneMapping(bloomResultId);
+            //DoScannerEffect(bloomResultId);
             buffer.ReleaseTemporaryRT(bloomResultId);
         }
         else

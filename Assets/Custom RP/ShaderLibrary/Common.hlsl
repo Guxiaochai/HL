@@ -19,6 +19,17 @@
 SAMPLER(sampler_linear_clamp);
 SAMPLER(sampler_point_clamp);
 
+bool IsOrthographicCamera(){
+    return unity_OrthoParams.w;
+}
+
+float OrthographicDepthBufferToLinear (float rawDepth) {
+	#if UNITY_REVERSED_Z
+		rawDepth = 1.0 - rawDepth;
+	#endif
+	return (_ProjectionParams.z - _ProjectionParams.y) * rawDepth + _ProjectionParams.y;
+}
+
 #include "Fragment.hlsl"
 
 float Square(float v){

@@ -34,6 +34,7 @@ CBUFFER_END
 float4x4 unity_MatrixVP;
 float4x4 unity_MatrixV;
 float4x4 glstate_matrix_projection;
+float4 unity_OrthoParams;
 float4 _ProjectionParams;
 
 #endif

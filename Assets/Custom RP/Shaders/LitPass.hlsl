@@ -93,6 +93,7 @@ float4 LitPassFragment (Varyings input) : SV_TARGET{
     clip(base.a - GetCutoff(config));// discard the fragment if the parameter is less or equal than zero
 #endif
     return float4(color, GetFinalAlpha(surface.alpha));
+    //return float4(config.fragment.depth.xxx / 20.0, 1.0);
 }
 
 #endif

@@ -12,6 +12,7 @@ partial class CameraRenderer
     partial void DrawUnsupportedShaders();
     partial void PrepareForSceneWindow();
     partial void PrepareBuffer();
+    partial void DisposeForEditor();
 
 #if UNITY_EDITOR
 
@@ -78,6 +79,11 @@ partial class CameraRenderer
         Profiler.BeginSample("Editor Only");
         buffer.name = camera.name;
         Profiler.EndSample();
+    }
+
+    partial void DisposeForEditor()
+    {
+        UnityEngine.Experimental.GlobalIllumination.Lightmapping.ResetDelegate();
     }
 
 #else

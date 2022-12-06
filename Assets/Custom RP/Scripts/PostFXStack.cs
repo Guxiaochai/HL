@@ -115,8 +115,8 @@ public partial class PostFXStack
         }
         else
         {
-            //DoColorGradingAndToneMapping(sourceId);
-            DoScannerEffect(sourceId);
+            DoColorGradingAndToneMapping(sourceId);
+            //DoScannerEffect(sourceId);
         }
         context.ExecuteCommandBuffer(buffer);
         buffer.Clear();

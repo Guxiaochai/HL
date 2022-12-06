@@ -6,8 +6,8 @@
 
 TEXTURE2D(_PostFXSource);
 TEXTURE2D(_PostFXSource2);
-TEXTURE2D(_CameraDepthTexture);
-SAMPLER(sampler_CameraDepthTexture);
+// TEXTURE2D(_CameraDepthTexture);
+// SAMPLER(sampler_CameraDepthTexture);
 
 bool _BloomBicubicUpsampling;
 bool _ColorGradingLUTInLogC;
@@ -313,8 +313,8 @@ float4 HorizBars(float2 p){
 float4 ScannerEffectPassFragment(Varyings input) : SV_TARGET{
 	float4 color = GetSource(input.baseUV);
 
-	float rawDepth = SAMPLE_TEXTURE2D(_CameraDepthTexture, sampler_CameraDepthTexture, input.uv_depth).r;
-	return float4(rawDepth, 0.0, 0.0, 1.0);
+	//float rawDepth = SAMPLE_TEXTURE2D(_CameraDepthTexture, sampler_CameraDepthTexture, input.uv_depth).r;
+	return float4(1.0, 0.0, 0.0, 1.0);
 }
 
 TEXTURE2D(_ColorGradingLUT);

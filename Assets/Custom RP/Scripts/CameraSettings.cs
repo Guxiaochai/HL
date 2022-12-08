@@ -8,6 +8,8 @@ public class CameraSettings
 
     public PostFXSettings postFXSettings = default;
 
+    public bool copyDepth = true;
+
     [RenderingLayerMaskField]
     public int renderingLayerMask = -1;
 

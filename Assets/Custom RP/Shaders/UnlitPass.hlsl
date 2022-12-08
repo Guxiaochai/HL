@@ -55,6 +55,9 @@ float4 UnlitPassFragment (Varyings input) : SV_TARGET{
     #if defined(_NEAR_FADE)
         config.nearFade = true;
     #endif
+    #if defined(_SOFT_PARTICLES)
+        config.softParticles = true;
+    #endif
     float4 base = GetBase(config);
     #if defined(_CLIPPING)
         clip(base.a - GetCutoff(config)); // discard the fragment if the parameter is less or equal than zero

@@ -36,17 +36,27 @@ public partial class CameraRenderer
 
     Material material;
 
+    Texture2D missingTexture;
+
     public CameraRenderer(Shader shader)
     {
         material = CoreUtils.CreateEngineMaterial(shader);
+        missingTexture = new Texture2D(1, 1)
+        {
+            hideFlags = HideFlags.HideAndDontSave,
+            name = "Missing"
+        };
+        missingTexture.SetPixel(0, 0, Color.white * 0.5f);
+        missingTexture.Apply(true, true);
     }
 
     public void Dispose()
     {
         CoreUtils.Destroy(material);
+        CoreUtils.Destroy(missingTexture);
     }
 
-    public void Render(ScriptableRenderContext context, Camera camera, bool allowHDR,
+    public void Render(ScriptableRenderContext context, Camera camera, CameraBufferSettings bufferSettings,
                        bool useDynamicBatching, bool useGPUInstacing, 
                        bool useLightsPerObject, ShadowSettings shadowSettings, PostFXSettings postFXSettings,
                        int colorLUTResolution)
@@ -57,7 +67,14 @@ public partial class CameraRenderer
         var crpCamera = camera.GetComponent<CustomRenderPipelineCamera>();
         CameraSettings cameraSettings = crpCamera ? crpCamera.Settings : defaultCameraSettings;
 
-        useDepthTexure = true;
+        if(camera.cameraType == CameraType.Reflection)
+        {
+            useDepthTexure = bufferSettings.copyDepthReflections;
+        }
+        else
+        {
+            useDepthTexure = bufferSettings.copyDepth && cameraSettings.copyDepth;
+        }
 
         if (cameraSettings.overridePostFX)
         {
@@ -70,7 +87,7 @@ public partial class CameraRenderer
         {
             return;
         }
-        useHDR = allowHDR && camera.allowHDR;
+        useHDR = bufferSettings.allowHDR && camera.allowHDR;
         buffer.BeginSample(SampleName);
         ExecuteBuffer();
         lighting.Setup(context, cullingResults, shadowSettings, useLightsPerObject, cameraSettings.maskLights ? cameraSettings.renderingLayerMask : -1);
@@ -167,6 +184,7 @@ public partial class CameraRenderer
 
         buffer.ClearRenderTarget(flags <=CameraClearFlags.Depth, flags == CameraClearFlags.Skybox, flags == CameraClearFlags.Color ? camera.backgroundColor.linear : Color.clear);
         buffer.BeginSample(SampleName);
+        buffer.SetGlobalTexture(depthTextureId, missingTexture);
         ExecuteBuffer();
     }
 

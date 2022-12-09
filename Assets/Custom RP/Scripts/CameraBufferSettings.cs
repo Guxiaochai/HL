@@ -1,7 +1,9 @@
+using UnityEngine;
+
 [System.Serializable]
 public struct CameraBufferSettings
 {
     public bool allowHDR;
 
-    public bool copyDepth, copyDepthReflections;
+    public bool copyColor, copyColorReflection, copyDepth, copyDepthReflections;
 }

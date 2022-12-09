@@ -9,7 +9,7 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: Particles Unlit
   m_Shader: {fileID: 4800000, guid: cfab11a3b86dfb54fbd055c694113e56, type: 3}
-  m_ShaderKeywords: _RECEIVE_SHADOWS _SHADOWS_ON _VERTEX_COLORS
+  m_ShaderKeywords: _DISTORTION _RECEIVE_SHADOWS _SHADOWS_ON _VERTEX_COLORS
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -41,6 +41,10 @@ Material:
         m_Offset: {x: 0, y: 0}
     - _DetailNormalMap:
         m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DistortionMap:
+        m_Texture: {fileID: 2800000, guid: 49be8d45a73f35a4d97562a613ca2fc7, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _EmissionMap:
@@ -80,7 +84,10 @@ Material:
     - _DetailNormalMapScale: 1
     - _DetailNormalScale: 1
     - _DetailSmoothness: 1
+    - _Distortion: 1
+    - _DistortionStrength: 0.008
     - _DstBlend: 10
+    - _FlipbookBlending: 0
     - _Fresnel: 1
     - _GlossMapScale: 1
     - _Glossiness: 0.5
@@ -88,6 +95,9 @@ Material:
     - _MaskMapToggle: 0
     - _Metallic: 0
     - _Mode: 0
+    - _NearFade: 0
+    - _NearFadeDistance: 2.95
+    - _NearFadeRange: 3.68
     - _NormalMapToggle: 0
     - _NormalScale: 1
     - _Occlusion: 1
@@ -98,6 +108,9 @@ Material:
     - _Shadows: 0
     - _Smoothness: 0.5
     - _SmoothnessTextureChannel: 0
+    - _SoftParticles: 0
+    - _SoftParticlesDistance: 4.19
+    - _SoftParticlesRange: 4.19
     - _SpecularHighlights: 1
     - _SrcBlend: 5
     - _UVSec: 0

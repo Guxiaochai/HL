@@ -21,7 +21,7 @@ public partial class CameraRenderer
     CullingResults cullingResults;
 
     bool
-        useHDR, useColorTexture, useDepthTexure, useIntermediateBuffer;
+        useHDR, useScaledRendering, useColorTexture, useDepthTexure, useIntermediateBuffer;
 
     static ShaderTagId unlitShaderTagId = new ShaderTagId("SRPDefaultUnlit");
     static ShaderTagId litShaderTagId = new ShaderTagId("CustomLit");
@@ -89,6 +89,8 @@ public partial class CameraRenderer
         {
             postFXSettings = cameraSettings.postFXSettings;
         }
+        float renderScale = bufferSettings.renderScale;
+        useScaledRendering = renderScale < 0.99f || renderScale > 1.01; //very slight deviations from 1 will have neither visual nor performance differences that matter. 
 
         PrepareBuffer();
         PrepareForSceneWindow();

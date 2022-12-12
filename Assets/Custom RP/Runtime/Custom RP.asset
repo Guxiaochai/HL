@@ -40,3 +40,4 @@ MonoBehaviour:
     copyColorReflection: 0
     copyDepth: 1
     copyDepthReflections: 0
+    renderScale: 1

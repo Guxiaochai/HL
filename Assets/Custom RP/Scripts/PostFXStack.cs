@@ -21,18 +21,23 @@ public partial class PostFXStack
         ColorGradingNeutral,
         ColorGradingReinhard,
         ScannerEffect,
-        Final
+        Final,
+        FinalRescale
     }
 
-    
+    Vector2Int bufferSize;
 
     bool useHDR;
 
     const int maxBloomPyramidLevels = 16;
     int bloomPyramidId;
 
+    bool bicubicRescaling;
+
     int
         bloomBicubicUpsamplingId = Shader.PropertyToID("_BloomBicubicUpsampling"),
+        copyBicubicId = Shader.PropertyToID("_CopyBicubic"),
+        finalResultId = Shader.PropertyToID("_FinalResult"),
         bloomPrefilterId = Shader.PropertyToID("_BloomPrefilter"),
         bloomThresholdId = Shader.PropertyToID("_BloomThreshold"),
         bloomIntensityId = Shader.PropertyToID("_BloomIntensity"),
@@ -93,15 +98,17 @@ public partial class PostFXStack
         }
     }
 
-    public void Setup(ScriptableRenderContext context, Camera camera, PostFXSettings settings, 
-                      bool useHDR, int colorLUTResolution, CameraSettings.FinalBlendMode finalBlendMode)
+    public void Setup(ScriptableRenderContext context, Camera camera, Vector2Int bufferSize, PostFXSettings settings, 
+                      bool useHDR, int colorLUTResolution, CameraSettings.FinalBlendMode finalBlendMode, bool bicubicRescaling)
     {
         this.useHDR = useHDR;
         this.colorLUTResolution = colorLUTResolution;
+        this.bufferSize = bufferSize;
         this.context = context;
         this.camera = camera;
         this.settings = camera.cameraType <= CameraType.SceneView ? settings : null;
         this.finalBlendMode = finalBlendMode;
+        this.bicubicRescaling = bicubicRescaling;
         ApplySceneViewState();
     }
 
@@ -129,7 +136,7 @@ public partial class PostFXStack
         buffer.DrawProcedural(Matrix4x4.identity, settings.Material, (int)pass, MeshTopology.Triangles, 3);
     }
 
-    void DrawFinal(RenderTargetIdentifier from)
+    void DrawFinal(RenderTargetIdentifier from, Pass pass)
     {
         buffer.SetGlobalFloat(finalSrcBlendId, (int)finalBlendMode.source);
         buffer.SetGlobalFloat(finalDstBlendId, (int)finalBlendMode.destination);
@@ -139,15 +146,25 @@ public partial class PostFXStack
                                finalBlendMode.destination == BlendMode.Zero ? RenderBufferLoadAction.DontCare : RenderBufferLoadAction.Load, 
                                RenderBufferStoreAction.Store);
         buffer.SetViewport(camera.pixelRect);
-        buffer.DrawProcedural(Matrix4x4.identity, settings.Material, (int)Pass.Final, MeshTopology.Triangles, 3);
+        buffer.DrawProcedural(Matrix4x4.identity, settings.Material, (int)pass, MeshTopology.Triangles, 3);
     }
 
     bool DoBloom(int sourceId)
     {
         //buffer.BeginSample("Bloom");
         PostFXSettings.BloomSettings bloom = settings.Bloom;
-        int width = camera.pixelWidth / 2, height = camera.pixelHeight / 2;
-        if(bloom.maxIterations == 0 || bloom.intensity <= 0f ||
+        int width, height;
+        if (bloom.ignoreRenderScale)
+        {
+            width = camera.pixelWidth / 2;
+            height = camera.pixelHeight / 2;
+        }
+        else
+        {
+            width = bufferSize.x / 2;
+            height = bufferSize.y / 2;
+        }
+        if (bloom.maxIterations == 0 || bloom.intensity <= 0f ||
             height < bloom.downscaleLimit * 2 || width < bloom.downscaleLimit * 2)
         {
             return false;
@@ -228,7 +245,7 @@ public partial class PostFXStack
         }
         buffer.SetGlobalFloat(bloomIntensityId, finalIntensity);
         buffer.SetGlobalTexture(fxSource2Id, sourceId);
-        buffer.GetTemporaryRT(bloomResultId, camera.pixelWidth, camera.pixelHeight, 0, FilterMode.Bilinear, format);
+        buffer.GetTemporaryRT(bloomResultId, bufferSize.x, bufferSize.y, 0, FilterMode.Bilinear, format);
         Draw(fromId, bloomResultId, finalPass);
         buffer.ReleaseTemporaryRT(fromId);
         buffer.EndSample("Bloom");
@@ -368,7 +385,20 @@ public partial class PostFXStack
         buffer.SetGlobalVector(colorGradingLUTParametersId,
             new Vector4(1f / lutWidth, 1f / lutHeight, lutHeight - 1f)
         );
-        DrawFinal(sourceId);
+        if(bufferSize.x == camera.pixelWidth)
+        {
+            DrawFinal(sourceId, Pass.Final);
+        }
+        else
+        {
+            buffer.SetGlobalFloat(finalSrcBlendId, 1f);
+            buffer.SetGlobalFloat(finalDstBlendId, 0f);
+            buffer.GetTemporaryRT(finalResultId, bufferSize.x, bufferSize.y, 0, FilterMode.Bilinear, RenderTextureFormat.Default);
+            Draw(sourceId, finalResultId, Pass.Final);
+            buffer.SetGlobalFloat(copyBicubicId, bicubicRescaling ? 1f : 0f);
+            DrawFinal(finalResultId, Pass.FinalRescale);
+            buffer.ReleaseTemporaryRT(finalResultId);
+        }
         buffer.ReleaseTemporaryRT(colorGradingLUTId);
     }
 

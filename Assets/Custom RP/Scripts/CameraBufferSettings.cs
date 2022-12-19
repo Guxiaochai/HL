@@ -9,4 +9,6 @@ public struct CameraBufferSettings
 
     [Range(0.1f, 2f)]
     public float renderScale;
+
+    public bool bicubicRescaling;
 }

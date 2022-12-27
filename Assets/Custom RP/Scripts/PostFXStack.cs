@@ -21,8 +21,9 @@ public partial class PostFXStack
         ColorGradingNeutral,
         ColorGradingReinhard,
         ScannerEffect,
-        Final,
-        FinalRescale
+        ApplyColorGrading,
+        FinalRescale,
+        FXAA
     }
 
     Vector2Int bufferSize;
@@ -37,6 +38,7 @@ public partial class PostFXStack
     int
         bloomBicubicUpsamplingId = Shader.PropertyToID("_BloomBicubicUpsampling"),
         copyBicubicId = Shader.PropertyToID("_CopyBicubic"),
+        colorGradingResultId = Shader.PropertyToID("_ColorGradingResult"),
         finalResultId = Shader.PropertyToID("_FinalResult"),
         bloomPrefilterId = Shader.PropertyToID("_BloomPrefilter"),
         bloomThresholdId = Shader.PropertyToID("_BloomThreshold"),
@@ -84,6 +86,8 @@ public partial class PostFXStack
 
     PostFXSettings settings;
 
+    CameraBufferSettings.FXAA fxaa;
+
     int colorLUTResolution;
 
     public bool IsActive => settings != null;
@@ -99,7 +103,8 @@ public partial class PostFXStack
     }
 
     public void Setup(ScriptableRenderContext context, Camera camera, Vector2Int bufferSize, PostFXSettings settings, 
-                      bool useHDR, int colorLUTResolution, CameraSettings.FinalBlendMode finalBlendMode, CameraBufferSettings.BicubicRescalingMode bicubicRescaling)
+                      bool useHDR, int colorLUTResolution, CameraSettings.FinalBlendMode finalBlendMode, CameraBufferSettings.BicubicRescalingMode bicubicRescaling,
+                      CameraBufferSettings.FXAA fxaa)
     {
         this.useHDR = useHDR;
         this.colorLUTResolution = colorLUTResolution;
@@ -109,6 +114,7 @@ public partial class PostFXStack
         this.settings = camera.cameraType <= CameraType.SceneView ? settings : null;
         this.finalBlendMode = finalBlendMode;
         this.bicubicRescaling = bicubicRescaling;
+        this.fxaa = fxaa;
         ApplySceneViewState();
     }
 
@@ -116,13 +122,13 @@ public partial class PostFXStack
     {
         if (DoBloom(sourceId))
         {
-            DoColorGradingAndToneMapping(bloomResultId);
+            DoFinal(bloomResultId);
             //DoScannerEffect(bloomResultId);
             buffer.ReleaseTemporaryRT(bloomResultId);
         }
         else
         {
-            DoColorGradingAndToneMapping(sourceId);
+            DoFinal(sourceId);
             //DoScannerEffect(sourceId);
         }
         context.ExecuteCommandBuffer(buffer);
@@ -357,7 +363,7 @@ public partial class PostFXStack
         
     }
 
-    void DoColorGradingAndToneMapping(int sourceId)
+    void DoFinal(int sourceId)
     {
         ConfigureColorAdjustments();
         ConfigureWhiteBalance();
@@ -385,16 +391,38 @@ public partial class PostFXStack
         buffer.SetGlobalVector(colorGradingLUTParametersId,
             new Vector4(1f / lutWidth, 1f / lutHeight, lutHeight - 1f)
         );
+        buffer.SetGlobalFloat(finalSrcBlendId, 1f);
+        buffer.SetGlobalFloat(finalDstBlendId, 0f);
+        if (fxaa.enabled)
+        {
+            buffer.GetTemporaryRT(colorGradingResultId, bufferSize.x, bufferSize.y, 0,
+                                  FilterMode.Bilinear, RenderTextureFormat.Default);
+            Draw(sourceId, colorGradingResultId, Pass.ApplyColorGrading);
+        }
         if(bufferSize.x == camera.pixelWidth)
         {
-            DrawFinal(sourceId, Pass.Final);
+            if (fxaa.enabled)
+            {
+                DrawFinal(colorGradingResultId, Pass.FXAA);
+                buffer.ReleaseTemporaryRT(colorGradingResultId);
+            }
+            else
+            {
+                DrawFinal(sourceId, Pass.ApplyColorGrading);
+            }
         }
         else
         {
-            buffer.SetGlobalFloat(finalSrcBlendId, 1f);
-            buffer.SetGlobalFloat(finalDstBlendId, 0f);
             buffer.GetTemporaryRT(finalResultId, bufferSize.x, bufferSize.y, 0, FilterMode.Bilinear, RenderTextureFormat.Default);
-            Draw(sourceId, finalResultId, Pass.Final);
+            if (fxaa.enabled)
+            {
+                Draw(colorGradingResultId, finalResultId, Pass.FXAA);
+                buffer.ReleaseTemporaryRT(colorGradingResultId);
+            }
+            else
+            {
+                Draw(sourceId, finalResultId, Pass.ApplyColorGrading);
+            }
             bool bicubicSampling =
                 bicubicRescaling == CameraBufferSettings.BicubicRescalingMode.UpAndDown ||
                 bicubicRescaling == CameraBufferSettings.BicubicRescalingMode.UpOnly &&

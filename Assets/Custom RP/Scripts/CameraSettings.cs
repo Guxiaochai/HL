@@ -16,6 +16,8 @@ public class CameraSettings
 
     public bool maskLights = false;
 
+    public bool allowFXAA = false;
+
     [Serializable]
     public struct FinalBlendMode
     {

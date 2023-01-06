@@ -19,7 +19,13 @@ public struct CameraBufferSettings
     public struct FXAA
     {
         public bool enabled;
+
+        [Range(0.0312f, 0.0833f)]
+        public float fixedThreshold;
+
+        [Range(0.063f, 0.333f)]
+        public float relativeThreshold;
     }
 
     public FXAA fxaa;
-} 
+}  

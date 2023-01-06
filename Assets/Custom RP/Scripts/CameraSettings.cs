@@ -18,6 +18,8 @@ public class CameraSettings
 
     public bool allowFXAA = false;
 
+    public bool keepAlpha = false;
+
     [Serializable]
     public struct FinalBlendMode
     {

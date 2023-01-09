@@ -4,7 +4,7 @@
 float4 _FXAAConfig;
 
 struct LumaNeighborhood{
-	float m, n, e, s, w;
+	float m, n, e, s, w, ne, se, sw, nw;
 	float highest, lowest, range;
 };
 
@@ -29,10 +29,23 @@ LumaNeighborhood GetLumaNeighborhood(float2 uv){
 	luma.e = GetLuma(uv, 1.0, 0.0);
 	luma.s = GetLuma(uv, 0.0, -1.0);
 	luma.w = GetLuma(uv, -1.0, 0.0);
+	luma.ne = GetLuma(uv, 1.0, 1.0);
+	luma.se = GetLuma(uv, 1.0, -1.0);
+	luma.sw = GetLuma(uv, -1.0, -1.0);
+	luma.nw = GetLuma(uv, -1.0, 1.0);
 	luma.highest = max(max(max(max(luma.m, luma.n), luma.e), luma.s), luma.w);
 	luma.lowest = min(min(min(min(luma.m, luma.n), luma.e), luma.s), luma.w);
 	luma.range = luma.highest - luma.lowest;
 	return luma;
+}
+
+float GetSubpixelBlendFactor(LumaNeighborhood luma){
+	float filter = 2.0 * (luma.n + luma.e + luma.s + luma.w);
+	filter += luma.ne + luma.nw + luma.se + luma.sw;
+	filter *= 1.0 / 12.0;
+	filter = saturate(filter / luma.range);
+	filter = smoothstep(0, 1, filter);
+	return filter * filter;
 }
 
 float4 FXAAPassFragment (Varyings input) : SV_TARGET {
@@ -40,7 +53,8 @@ float4 FXAAPassFragment (Varyings input) : SV_TARGET {
 	if(CanSkipFXAA(luma)){
 		return 0.0;
 	}
-	return luma.range;
+	//return luma.range;
+	return GetSubpixelBlendFactor(luma);
 }
 
 #endif

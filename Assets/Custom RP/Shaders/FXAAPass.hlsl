@@ -8,6 +8,12 @@ struct LumaNeighborhood{
 	float highest, lowest, range;
 };
 
+struct FXAAEdge
+{
+	bool isHorizontal;
+	float pixelStep;
+};
+
 bool CanSkipFXAA(LumaNeighborhood luma){
 	return luma.range < max(_FXAAConfig.x, _FXAAConfig.y * luma.highest);
 }
@@ -48,13 +54,54 @@ float GetSubpixelBlendFactor(LumaNeighborhood luma){
 	return filter * filter;
 }
 
+bool IsHorizontalEdge(LumaNeighborhood luma)
+{
+	float horizontal = 2.0 * abs(luma.n + luma.s - 2.0 * luma.m) +
+			abs(luma.nw + luma.sw - 2.0 * luma.w) +
+			abs(luma.ne + luma.se - 2.0 * luma.e);
+	float vertical = abs(luma.e + luma.w - 2.0 * luma.m) +
+			abs(luma.nw + luma.ne - 2.0 * luma.n) +
+			abs(luma.sw + luma.se - 2.0 * luma.s);
+	return horizontal >= vertical;
+}
+
+FXAAEdge GetFXAAEdge(LumaNeighborhood luma)
+{
+	FXAAEdge edge;
+	edge.isHorizontal = IsHorizontalEdge(luma);
+	if (edge.isHorizontal)
+	{
+		edge.pixelStep = GetSourceTexelSize().y;
+	}
+	else
+	{
+		edge.pixelStep = GetSourceTexelSize().x;
+	}
+	return edge;
+}
+
+// 这个函数用作测试
+float testFuc(LumaNeighborhood luma)
+{
+	float filter = luma.n + luma.e + luma.s + luma.w;
+	filter *= 1.0 / 4.0;
+	filter = abs(filter - luma.m);
+	filter = filter / luma.range;
+	filter = smoothstep(0, 1, filter);
+	return filter * filter;
+}
+
 float4 FXAAPassFragment (Varyings input) : SV_TARGET {
 	LumaNeighborhood luma = GetLumaNeighborhood(input.screenUV);
 	if(CanSkipFXAA(luma)){
 		return 0.0;
 	}
+
+	FXAAEdge edge = GetFXAAEdge(luma);
 	//return luma.range;
-	return GetSubpixelBlendFactor(luma);
+	//return GetSubpixelBlendFactor(luma);
+	//return testFuc(luma);
+	return edge.isHorizontal ? float4(1.0, 0.0, 0.0, 0.0) : 1.0;
 }
 
 #endif

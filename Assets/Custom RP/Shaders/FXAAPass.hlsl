@@ -69,13 +69,24 @@ FXAAEdge GetFXAAEdge(LumaNeighborhood luma)
 {
 	FXAAEdge edge;
 	edge.isHorizontal = IsHorizontalEdge(luma);
+	float lumaP, lumaN;
 	if (edge.isHorizontal)
 	{
 		edge.pixelStep = GetSourceTexelSize().y;
+		lumaP = luma.n;
+		lumaN = luma.s;
 	}
 	else
 	{
 		edge.pixelStep = GetSourceTexelSize().x;
+		lumaP = luma.e;
+		lumaN = luma.w;
+	}
+	float gradientP = abs(lumaP - luma.m);
+	float gradientN = abs(lumaN - luma.m);
+	if (gradientP < gradientN)
+	{
+		edge.pixelStep = -edge.pixelStep;
 	}
 	return edge;
 }
@@ -98,10 +109,11 @@ float4 FXAAPassFragment (Varyings input) : SV_TARGET {
 	}
 
 	FXAAEdge edge = GetFXAAEdge(luma);
+	//return edge.pixelStep > 0.0 ? float4(1.0, 0.0, 0.0, 0.0) : 1.0;
+
 	//return luma.range;
-	//return GetSubpixelBlendFactor(luma);
+	return GetSubpixelBlendFactor(luma);
 	//return testFuc(luma);
-	return edge.isHorizontal ? float4(1.0, 0.0, 0.0, 0.0) : 1.0;
 }
 
 #endif

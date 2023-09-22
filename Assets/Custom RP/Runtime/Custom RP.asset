@@ -44,3 +44,6 @@ MonoBehaviour:
     bicubicRescaling: 0
     fxaa:
       enabled: 1
+      fixedThreshold: 0.0833
+      relativeThreshold: 0.333
+      subpixelBlending: 1

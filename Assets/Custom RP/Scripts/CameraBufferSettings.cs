@@ -25,6 +25,9 @@ public struct CameraBufferSettings
 
         [Range(0.063f, 0.333f)]
         public float relativeThreshold;
+        
+        [Range(0f, 1f)]
+        public float subpixelBlending;
     }
 
     public FXAA fxaa;

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEditor;
+using UnityEngine.Experimental.Rendering.RenderGraphModule;
 
 public partial class CameraRenderer
 {
@@ -66,7 +67,9 @@ public partial class CameraRenderer
         CoreUtils.Destroy(missingTexture);
     }
 
-    public void Render(ScriptableRenderContext context, Camera camera, CameraBufferSettings bufferSettings,
+    public void Render(RenderGraph renderGraph, 
+                       ScriptableRenderContext context, Camera camera, 
+                       CameraBufferSettings bufferSettings,
                        bool useDynamicBatching, bool useGPUInstacing, 
                        bool useLightsPerObject, ShadowSettings shadowSettings, PostFXSettings postFXSettings,
                        int colorLUTResolution)
@@ -136,8 +139,25 @@ public partial class CameraRenderer
             ExecuteBuffer();
         }
         DrawGizmosAfterFX();
+
+        var renderGraphParameters = new RenderGraphParameters {
+            commandBuffer = CommandBufferPool.Get(),
+            currentFrameIndex = Time.frameCount,
+            executionName = "Render Camera",
+            scriptableRenderContext = context
+                                                               };
+        //renderGraph.RecordAndExecute(renderGraphParameters).Dispose();
+        using (renderGraph.RecordAndExecute(renderGraphParameters))
+        {
+            // Add passes here.
+            using RenderGraphBuilder builder = 
+                renderGraph.AddRenderPass("Test Pass", out CameraSettings data);
+            builder.SetRenderFunc((CameraSettings data, RenderGraphContext context) => { });
+        }
+
         Cleanup();
         Submit();
+        CommandBufferPool.Release(renderGraphParameters.commandBuffer);
     }
 
     void Draw(RenderTargetIdentifier from, RenderTargetIdentifier to, bool isDepth = false)

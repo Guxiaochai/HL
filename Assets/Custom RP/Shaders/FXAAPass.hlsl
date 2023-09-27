@@ -124,9 +124,9 @@ float4 FXAAPassFragment (Varyings input) : SV_TARGET {
     float4 finalColor = GetSource(blendUV) * factor + GetSource(input.screenUV) * (1 - factor);
 	
     //return edge.isHorizontal ? float4(1.0, 0.0, 0.0, 1.0) : float4(1.0, 1.0, 1.0, 1.0);
-    //return GetSource(blendUV);
+    return GetSource(blendUV);
     //return edge.pixelStep > 0.0 ? float4(1.0, 0.0, 0.0, 0.0) : 1.0;
-    return finalColor;
+    //return finalColor;
 	
 }
 

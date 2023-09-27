@@ -6,6 +6,8 @@ using UnityEngine.Experimental.Rendering.RenderGraphModule;
 
 public partial class CustomRenderPipeline : RenderPipeline
 {
+    readonly RenderGraph renderGraph = new("Emmer Custom SRP Render Graph");
+
     CameraRenderer renderer;
 
     CameraBufferSettings cameraBufferSettings;
@@ -21,10 +23,10 @@ public partial class CustomRenderPipeline : RenderPipeline
     {
         foreach(Camera camera in cameras)
         {
-            renderer.Render(context, camera, cameraBufferSettings, useDynamicBatching, useGPUInstancing, 
+            renderer.Render(renderGraph, context, camera, cameraBufferSettings, useDynamicBatching, useGPUInstancing, 
                             useLightsPerObject, shadowSettings, postFXSettings, colorLUTResolution);
         }
-       
+        renderGraph.EndFrame();
     }
 
     public CustomRenderPipeline(CameraBufferSettings cameraBufferSettings, bool useDynamicBatching, bool useGPUInstancing,

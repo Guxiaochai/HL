@@ -18,6 +18,7 @@ public partial class CustomRenderPipeline
     {
         base.Dispose(disposing);
         Lightmapping.ResetDelegate();
+        renderGraph.Cleanup();
     }
 
     static Lightmapping.RequestLightsDelegate lightsDelegate = (Light[] lights, NativeArray<LightDataGI> output) =>

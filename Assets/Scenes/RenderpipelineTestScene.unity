@@ -6218,7 +6218,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!81 &963194226
 AudioListener:
   m_ObjectHideFlags: 0
@@ -6307,7 +6307,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   settings:
     overridePostFX: 0
-    postFXSettings: {fileID: 0}
+    postFXSettings: {fileID: 11400000, guid: 21b7f9013b797ef43a499c9b3d6c089b, type: 2}
     copyColor: 1
     copyDepth: 1
     renderingLayerMask: -1
@@ -6441,7 +6441,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!199 &1108706955
 ParticleSystemRenderer:
   serializedVersion: 6

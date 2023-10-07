@@ -13,7 +13,7 @@ public partial class CameraRenderer
 
     PostFXStack postFXStack = new PostFXStack();
 
-    Camera camera;
+    public Camera camera;
 
     Vector2Int bufferSize;
 
@@ -23,7 +23,7 @@ public partial class CameraRenderer
 
     CullingResults cullingResults;
 
-    bool
+    public bool
         useHDR, useScaledRendering, useColorTexture, useDepthTexure, useIntermediateBuffer;
 
     static ShaderTagId unlitShaderTagId = new ShaderTagId("SRPDefaultUnlit");
@@ -31,7 +31,7 @@ public partial class CameraRenderer
     static CameraSettings defaultCameraSettings = new CameraSettings();
 
     //static int frameBufferId = Shader.PropertyToID("_CameraFrameBuffer");
-    static int
+    public static int
         bufferSizeId = Shader.PropertyToID("_CameraBufferSize"),
         colorAttachmentId = Shader.PropertyToID("_CameraColorAttachment"),
         depthAttachmentId = Shader.PropertyToID("_CameraDepthAttachment"),
@@ -127,18 +127,13 @@ public partial class CameraRenderer
         Setup();
         DrawVisibleGeometry(useDynamicBatching, useGPUInstacing, useLightsPerObject, cameraSettings.renderingLayerMask);
         DrawUnsupportedShaders();
-        DrawGizmosBeforeFX();
+        //DrawGizmosBeforeFX();
         if (postFXStack.IsActive)
         {
             postFXStack.Render(colorAttachmentId);
         }
-        else if (useIntermediateBuffer)
-        {
-            //Draw(colorAttachmentId, BuiltinRenderTextureType.CameraTarget);
-            DrawFinal(cameraSettings.finalBlendMode);
-            ExecuteBuffer();
-        }
-        DrawGizmosAfterFX();
+        
+        //DrawGizmosAfterFX();
 
         var renderGraphParameters = new RenderGraphParameters {
             commandBuffer = CommandBufferPool.Get(),
@@ -150,9 +145,12 @@ public partial class CameraRenderer
         using (renderGraph.RecordAndExecute(renderGraphParameters))
         {
             // Add passes here.
-            using RenderGraphBuilder builder = 
-                renderGraph.AddRenderPass("Test Pass", out CameraSettings data);
-            builder.SetRenderFunc((CameraSettings data, RenderGraphContext context) => { });
+            if (postFXStack.IsActive) { }
+            else if (useIntermediateBuffer)
+            {
+                FinalPass.Record(renderGraph, this, cameraSettings.finalBlendMode);
+            }
+            GizmosPass.Record(renderGraph, this);
         }
 
         Cleanup();
@@ -160,7 +158,7 @@ public partial class CameraRenderer
         CommandBufferPool.Release(renderGraphParameters.commandBuffer);
     }
 
-    void Draw(RenderTargetIdentifier from, RenderTargetIdentifier to, bool isDepth = false)
+    public void Draw(RenderTargetIdentifier from, RenderTargetIdentifier to, bool isDepth = false)
     {
         buffer.SetGlobalTexture(sourceTextureId, from);
         buffer.SetRenderTarget(
@@ -171,7 +169,7 @@ public partial class CameraRenderer
         );
     }
 
-    void DrawFinal(CameraSettings.FinalBlendMode finalBlendMode)
+    public void DrawFinal(CameraSettings.FinalBlendMode finalBlendMode)
     {
         buffer.SetGlobalFloat(srcBlendId, (float)finalBlendMode.source);
         buffer.SetGlobalFloat(dstBlendId, (float)finalBlendMode.destination);
@@ -259,7 +257,7 @@ public partial class CameraRenderer
         ExecuteBuffer();
     }
 
-    void ExecuteBuffer()
+    public void ExecuteBuffer()
     {
         context.ExecuteCommandBuffer(buffer);
         buffer.Clear();

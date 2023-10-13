@@ -172,12 +172,13 @@ public class PostFXSettings : ScriptableObject
     public ShadowsMidtonesHighlightsSettings ShadowsMidtonesHighlights => shadowsMidtonesHighlighs;
 
     // Scanner Effect /////////////////////////////////////////////////////
-    [SerializeField]
-    public bool scannerEffectIsActive = false;
+    
 
     [Serializable]
     public struct ScannerEffectSettings
     {
+        public bool scannerEffectIsActive;
+
         public float scanDistance;
 
         public float scanWidth;
@@ -197,4 +198,9 @@ public class PostFXSettings : ScriptableObject
     ScannerEffectSettings scannerEffect = default;
 
     public ScannerEffectSettings ScannerEffect => scannerEffect;
+
+
+    // Depth of Field
+
+
 }

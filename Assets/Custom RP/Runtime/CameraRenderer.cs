@@ -265,8 +265,9 @@ public partial class CameraRenderer
 
     bool Cull(float maxShadowDistance)
     {
-        
-        if(camera.TryGetCullingParameters(out ScriptableCullingParameters p))
+        // to cull, we need to keep track of multiple camera settings and matrices
+        // for which, we use the ScriptableCullingParameters struct
+        if (camera.TryGetCullingParameters(out ScriptableCullingParameters p))
         {
             p.shadowDistance = Mathf.Min(maxShadowDistance, camera.farClipPlane);
             cullingResults = context.Cull(ref p);

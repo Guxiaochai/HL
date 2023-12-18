@@ -51,8 +51,8 @@ MonoBehaviour:
     shadowsEnd: 0.3
     highlightsStart: 0.55
     highlightsEnd: 1
-  scannerEffectIsActive: 0
   scannerEffect:
+    scannerEffectIsActive: 0
     scanDistance: 0
     scanWidth: 0
     leadingEdgeSharpness: 0

@@ -193,7 +193,7 @@ public partial class CameraRenderer
         PerObjectData lightsPerObjectFlags = useLightsPerObject ? PerObjectData.LightData | PerObjectData.LightIndices : PerObjectData.None;
         var sortingSettings = new SortingSettings(camera)
         {
-            criteria = SortingCriteria.CommonOpaque
+            criteria = SortingCriteria.CommonOpaque // opaque objects drawn from front-to-back
         };
         var drawingSettings = new DrawingSettings(unlitShaderTagId, sortingSettings)
         {

@@ -51,11 +51,11 @@ MonoBehaviour:
     shadowsEnd: 0.3
     highlightsStart: 0.55
     highlightsEnd: 1
-  scannerEffectIsActive: 0
   scannerEffect:
-    scanDistance: 0
-    scanWidth: 0
-    leadingEdgeSharpness: 0
+    scannerEffectIsActive: 0
+    scanDistance: 1.32
+    scanWidth: 1.89
+    leadingEdgeSharpness: 4.6
     leadingEdgeColor: {r: 0, g: 0, b: 0, a: 0}
     midColor: {r: 0, g: 0, b: 0, a: 0}
     trailColor: {r: 0, g: 0, b: 0, a: 0}

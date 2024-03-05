@@ -16,7 +16,7 @@ public class EmmerDevTool : EditorWindow
     {
         GetWindow(typeof(EmmerDevTool), false, "Emmer Dev Tool");
     }
-
+    //
     private void OnGUI()
     {
         if (GUILayout.Button("Test", GUILayout.Height(ButtonHeight)))
@@ -24,4 +24,12 @@ public class EmmerDevTool : EditorWindow
             Debug.Log(CurrentScenePath);
         }
     }
+
+    public enum Test
+    {
+        Undefined = 0
+    }
+
+    
+
 }

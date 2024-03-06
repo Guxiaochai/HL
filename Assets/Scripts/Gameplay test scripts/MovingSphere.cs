@@ -10,13 +10,14 @@ public class MovingSphere : MonoBehaviour
     [SerializeField, Range(0f, 100f)]
     float maxAcceleration = 10f;
 
-    [SerializeField]
-    Rect allowArea = new Rect(-5f, -5f, 10f, 10f);
+    Vector3 velocity, desiredVelocity;
 
-    [SerializeField, Range(0f, 1f)]
-    float bunciness = 0.5f;
+    Rigidbody body;
 
-    Vector3 velocity;
+    private void Awake()
+    {
+        body = GetComponent<Rigidbody>();
+    }
 
     private void Update()
     {
@@ -25,48 +26,18 @@ public class MovingSphere : MonoBehaviour
         playerInput.y = Input.GetAxis("Vertical");
         //playerInput.Normalize();
         playerInput = Vector2.ClampMagnitude(playerInput, 1f);
-        Vector3 desiredVelocity = new Vector3(playerInput.x, 0f, playerInput.y) * maxSpeed;
-        float maxSpeedChange = maxAcceleration * Time.deltaTime;
+        desiredVelocity = new Vector3(playerInput.x, 0f, playerInput.y) * maxSpeed;
+    }
 
-        #region same as MoveTowards
-        //if (velocity.x < desiredVelocity.x)
-        //{
-        //    // to prevent the result exceeding the desiredVelocity.x
-        //    velocity.x = Mathf.Min(velocity.x + maxSpeedChange, desiredVelocity.x);
-        //}
-        //else if (velocity.x > desiredVelocity.x)
-        //{
-        //    velocity.x = Mathf.Max(velocity.x - maxSpeedChange, desiredVelocity.x);
-        //}
-        #endregion
+    private void FixedUpdate()
+    {
+        //physics collisions and such also affect velocity,
+        //so retrieve it from the body before adjusting it to match the desired velocity.
+        velocity = body.velocity;
+        float maxSpeedChange = maxAcceleration * Time.deltaTime; //When FixedUpdate gets invoked Time.deltaTime is equal to Time.fixedDeltaTime.
         velocity.x = Mathf.MoveTowards(velocity.x, desiredVelocity.x, maxSpeedChange);
         velocity.z = Mathf.MoveTowards(velocity.z, desiredVelocity.z, maxSpeedChange);
 
-        Vector3 displacement = velocity * Time.deltaTime;
-        Vector3 newPosition = transform.localPosition + displacement;
-
-        if (newPosition.x < allowArea.xMin)
-        {
-            newPosition.x = allowArea.xMin;
-            velocity.x = -velocity.x * bunciness;
-        }
-        else if (newPosition.x > allowArea.xMax)
-        {
-            newPosition.x = allowArea.xMax;
-            velocity.x = -velocity.x * bunciness;
-        }
-
-        if (newPosition.z < allowArea.yMin)
-        {
-            newPosition.z = allowArea.yMin;
-            velocity.z = -velocity.z * bunciness;
-        }
-        else if (newPosition.z > allowArea.yMax)
-        {
-            newPosition.z = allowArea.yMax;
-            velocity.z = -velocity.z * bunciness;
-        }
-
-        transform.localPosition = newPosition;
+        body.velocity = velocity;
     }
 }

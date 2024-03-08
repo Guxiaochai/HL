@@ -10,7 +10,8 @@ public class MovingSphere : MonoBehaviour
     [SerializeField, Range(0f, 100f)]
     float maxAcceleration = 10f;
 
-    Vector3 velocity, desiredVelocity;
+    private Vector2 velocity;
+    private Vector3 desiredVelocity;
 
     Rigidbody body;
 
@@ -21,23 +22,16 @@ public class MovingSphere : MonoBehaviour
 
     private void Update()
     {
-        Vector2 playerInput;
-        playerInput.x = Input.GetAxis("Horizontal");
-        playerInput.y = Input.GetAxis("Vertical");
-        //playerInput.Normalize();
-        playerInput = Vector2.ClampMagnitude(playerInput, 1f);
-        desiredVelocity = new Vector3(playerInput.x, 0f, playerInput.y) * maxSpeed;
+        velocity = PlayerStates.Instance.MoveDir * (maxSpeed * Time.deltaTime);
+        velocity.x = Mathf.Clamp(velocity.x, -maxAcceleration, maxAcceleration * Time.deltaTime);
+        velocity.y = Mathf.Clamp(velocity.y, -maxAcceleration, maxAcceleration * Time.deltaTime);
+        
+        desiredVelocity.x = velocity.x;
+        desiredVelocity.z = velocity.y;
     }
 
     private void FixedUpdate()
     {
-        //physics collisions and such also affect velocity,
-        //so retrieve it from the body before adjusting it to match the desired velocity.
-        velocity = body.velocity;
-        float maxSpeedChange = maxAcceleration * Time.deltaTime; //When FixedUpdate gets invoked Time.deltaTime is equal to Time.fixedDeltaTime.
-        velocity.x = Mathf.MoveTowards(velocity.x, desiredVelocity.x, maxSpeedChange);
-        velocity.z = Mathf.MoveTowards(velocity.z, desiredVelocity.z, maxSpeedChange);
-
-        body.velocity = velocity;
+        body.velocity += desiredVelocity;
     }
 }

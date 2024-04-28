@@ -20,8 +20,11 @@ public class MovingSphere : MonoBehaviour
     {
         body = GetComponent<Rigidbody>();
         var inputsource = GetComponent<InputReader>().GetInputSource();
-        inputsource.Player.Jump.canceled += OnJumpInvoke;
-        inputsource.Player.Jump.performed += OnJumpInvoke;
+        if (inputsource != default)
+        {
+            inputsource.Player.Jump.canceled += OnJumpInvoke;
+            inputsource.Player.Jump.performed += OnJumpInvoke;
+        }
     }
 
     private void Update()

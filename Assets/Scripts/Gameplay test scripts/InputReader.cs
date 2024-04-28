@@ -2,10 +2,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class InputReader : MonoBehaviour
 {
     private InputSource m_inputSource;
+    private bool m_jumpAccumulate;
 
     private void Awake()
     {
@@ -30,5 +32,10 @@ public class InputReader : MonoBehaviour
     private void Update()
     {
         PlayerStates.Instance.MoveDir = m_inputSource.Player.Move.ReadValue<Vector2>();
+    }
+
+    public InputSource GetInputSource()
+    {
+        return m_inputSource;
     }
 }

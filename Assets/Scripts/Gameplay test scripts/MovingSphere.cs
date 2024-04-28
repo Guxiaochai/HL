@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class MovingSphere : MonoBehaviour
 {
@@ -18,6 +19,9 @@ public class MovingSphere : MonoBehaviour
     private void Awake()
     {
         body = GetComponent<Rigidbody>();
+        var inputsource = GetComponent<InputReader>().GetInputSource();
+        inputsource.Player.Jump.canceled += OnJumpInvoke;
+        inputsource.Player.Jump.performed += OnJumpInvoke;
     }
 
     private void Update()
@@ -33,5 +37,15 @@ public class MovingSphere : MonoBehaviour
     private void FixedUpdate()
     {
         body.velocity += desiredVelocity;
+    }
+
+    private void OnJumpInvoke(InputAction.CallbackContext cbc)
+    {
+        if (cbc.duration > 0.15f && cbc.canceled)
+        {
+            return;
+        }
+         
+        body.AddForce(Vector3.up * (Mathf.Clamp((float)cbc.duration, 0.1f, 0.15f)/(0.15f - 0.1f) * PlayerStates.Instance.JumpPower), ForceMode.Impulse);
     }
 }

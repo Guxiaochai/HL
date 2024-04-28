@@ -19,6 +19,10 @@ public class PlayerStates
         }
     }
 
+    #region TODO:Turn to ScriptObject for Player Setting
     public Vector2 MoveDir;
     public float Speed;
+    public float JumpPower = 20;
+    #endregion
+   
 }
